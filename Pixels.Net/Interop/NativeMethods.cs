@@ -69,83 +69,10 @@ internal static partial class NativeMethods
     
     [DllImport(SimpleBleLibraryName, EntryPoint = "simpleble_peripheral_unsubscribe")]
     internal static extern CallResult Unsubscribe(SafePeripheralHandle peripheral, [MarshalAs(UnmanagedType.Struct)]BleUuid service, [MarshalAs(UnmanagedType.Struct)]BleUuid characteristic);
-}
-
-[StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
-internal struct BleUuid
-{
-    [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 37)]
-    public string Value;
-
-    public BleUuid(string value)
-    {
-        Value = value;
-    }
-}
-
-[StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
-internal struct BleService
-{
-    public BleUuid Uuid;
-
-    public nuint DataLength;
     
-    [MarshalAs(UnmanagedType.ByValArray, SizeConst = 27)]
-    public byte[] Data = new byte[27];
+    [LibraryImport(SimpleBleLibraryName, EntryPoint = "simpleble_logging_set_level")]
+    internal static partial void SetLogLevel(BleLogLevel level);
     
-    public nuint CharacteristicCount;
-    
-    [MarshalAs(UnmanagedType.ByValArray, SizeConst = 16)]
-    public BleCharacteristic[] Characteristics = new BleCharacteristic[16];
-
-    public BleService()
-    {
-        Uuid = default;
-        DataLength = 0;
-        CharacteristicCount = 0;
-    }
-}
-
-[StructLayout(LayoutKind.Sequential)]
-internal struct BleCharacteristic
-{
-    public BleUuid Uuid;
-
-    [MarshalAs(UnmanagedType.U1)] public bool CanRead;
-    [MarshalAs(UnmanagedType.U1)] public bool CanReadRequest;
-    [MarshalAs(UnmanagedType.U1)] public bool CanWriteCommand;
-    [MarshalAs(UnmanagedType.U1)] public bool CanNotify;
-    [MarshalAs(UnmanagedType.U1)] public bool CanIndicate;
-
-    public nuint DescriptorCount;
-
-    [MarshalAs(UnmanagedType.ByValArray, SizeConst = 16)]
-    public BleDescriptor[] Descriptors = new BleDescriptor[16];
-
-    public BleCharacteristic()
-    {
-        Uuid = default;
-        CanRead = false;
-        CanReadRequest = false;
-        CanWriteCommand = false;
-        CanNotify = false;
-        CanIndicate = false;
-        DescriptorCount = 0;
-    }
-}
-
-[StructLayout(LayoutKind.Sequential)]
-internal struct BleDescriptor
-{
-    public BleUuid Uuid;
-}
-
-[StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
-internal struct BleManufacturerData
-{
-    public ushort ManufacturerId;
-    public nuint DataLength;
-
-    [MarshalAs(UnmanagedType.ByValArray, SizeConst = 27)]
-    public byte[] Data;
+    [LibraryImport(SimpleBleLibraryName, EntryPoint = "simpleble_logging_set_callback")]
+    internal static partial void SetLogCallback(LogCallback callback);
 }

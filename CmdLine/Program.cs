@@ -26,17 +26,27 @@ internal static class Program
         }
 
         var mgr = PixelsManager.Create();
-        await foreach (PixelsDie die in mgr.ScanAsync(saved == null, false, saved, exit.Token))
+        try
         {
-            die.RollStateChanged += DieRolled;
-            if (!die.IsConnected)
+            Console.WriteLine("Searching for dice (can help to pick up and handle them)");
+            await foreach (PixelsDie die in mgr.ScanAsync(saved == null, false, saved, exit.Token))
             {
-                Console.WriteLine($"TO SAVE: {die.GetPersistentIdentifier()}");
-                Console.WriteLine("Connecting to die...");
-                await die.ConnectAsync();
+                die.RollStateChanged += DieRolled;
+                if (!die.IsConnected)
+                {
+                    Console.WriteLine($"TO SAVE: {die.GetPersistentIdentifier()}");
+                    Console.WriteLine("Connecting to die...");
+                    await die.ConnectAsync();
+                }
+
+                Console.WriteLine(
+                    $"Connected to die {die.PixelId} (color:{die.Colorway}, type:{die.Type}, firmware:{die.BuildTimestamp.ToLocalTime()}");
+                die.Blink(5, TimeSpan.FromSeconds(1), Color.Aqua, 0xFF, 0, false);
             }
-            Console.WriteLine($"Connected to die {die.PixelId} (color:{die.Colorway}, type:{die.Type}, firmware:{die.BuildTimestamp.ToLocalTime()}");
-            die.Blink(5, TimeSpan.FromSeconds(1), Color.Aqua, 0xFF, 0, false);
+        }
+        catch (OperationCanceledException) when (exit.IsCancellationRequested)
+        {
+            Console.WriteLine("Exiting");
         }
     }
 

@@ -36,7 +36,28 @@ internal class BleManager
 
     public static BleManager Create()
     {
+        #if DEBUG
+        NativeMethods.SetLogLevel(BleLogLevel.Info);
+        #else
+        NativeMethods.SetLogLevel(BleLogLevel.None);
+        #endif
+        NativeMethods.SetLogCallback(SimpleBleLog);
         var enabled = NativeMethods.IsBluetoothEnabled();
         return new BleManager(enabled, new Dispatcher());
+    }
+
+    private static void SimpleBleLog(BleLogLevel level, IntPtr pModule, IntPtr pFile, uint line, IntPtr pFunction, IntPtr pMessage)
+    {
+        if (level > BleLogLevel.Error)
+        {
+            return;
+        }
+
+        string module = Marshal.PtrToStringAnsi(pModule);
+        string file = Marshal.PtrToStringAnsi(pFile);
+        string function = Marshal.PtrToStringAnsi(pFunction);
+        string message = Marshal.PtrToStringAnsi(pMessage);
+        
+        Console.WriteLine($"[{level}] {module}: {file}:{line} in {function}: {message}");
     }
 }
