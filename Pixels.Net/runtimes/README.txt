@@ -1,0 +1,1 @@
+﻿The files in this folder are created from https://github.com/OpenBluetoothToolbox/SimpleBLE

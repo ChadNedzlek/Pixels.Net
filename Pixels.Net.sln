@@ -1,0 +1,39 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Pixels.Net", "Pixels.Net\Pixels.Net.csproj", "{C663A62D-72B1-4545-966A-206D276F8542}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Pixels.Net.Tests", "Pixels.Net.Tests\Pixels.Net.Tests.csproj", "{3202DF97-8B56-4E35-B28A-23A7E4A1631B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CmdLine", "CmdLine\CmdLine.csproj", "{9FD9636E-FAAE-48A0-9327-F617324219B6}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BasicDiceMonitor", "BasicDiceMonitor\BasicDiceMonitor.csproj", "{71189CE0-65D3-44C4-90CB-68337FA73254}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Global", "Global", "{0D1BD126-1939-4122-875E-35EBC836ED18}"
+	ProjectSection(SolutionItems) = preProject
+		.gitignore = .gitignore
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{C663A62D-72B1-4545-966A-206D276F8542}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C663A62D-72B1-4545-966A-206D276F8542}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C663A62D-72B1-4545-966A-206D276F8542}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C663A62D-72B1-4545-966A-206D276F8542}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3202DF97-8B56-4E35-B28A-23A7E4A1631B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3202DF97-8B56-4E35-B28A-23A7E4A1631B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3202DF97-8B56-4E35-B28A-23A7E4A1631B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3202DF97-8B56-4E35-B28A-23A7E4A1631B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9FD9636E-FAAE-48A0-9327-F617324219B6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9FD9636E-FAAE-48A0-9327-F617324219B6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9FD9636E-FAAE-48A0-9327-F617324219B6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9FD9636E-FAAE-48A0-9327-F617324219B6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{71189CE0-65D3-44C4-90CB-68337FA73254}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{71189CE0-65D3-44C4-90CB-68337FA73254}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{71189CE0-65D3-44C4-90CB-68337FA73254}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{71189CE0-65D3-44C4-90CB-68337FA73254}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
