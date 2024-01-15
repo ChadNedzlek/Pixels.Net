@@ -18,26 +18,26 @@ internal sealed class BleAdapter : IDisposable
         _dispatcher = dispatcher;
     }
 
-    private string _name;
+    private string _identifier;
 
-    public string Name
+    public string Identifier
     {
         get
         {
-            if (_name == null)
+            if (_identifier == null)
             {
                 using StringHandle id = NativeMethods.GetIdentifier(_adapter);
-                _name = id.Value;
+                _identifier = id.Value;
             }
 
-            return _name;
+            return _identifier;
         }
     }
 
     public void Dispose()
     {
-        _adapter.Dispose();
         StopScanning();
+        _adapter.Dispose();
     }
 
     private Action<BlePeripheral> _onMatch;
@@ -83,7 +83,7 @@ internal sealed class BleAdapter : IDisposable
     {
         if (Interlocked.Exchange(ref _foundCallback, null) == null) return;
         
-        NativeMethods.StopScan(_adapter).CheckSuccess();;
+        NativeMethods.StopScan(_adapter).CheckSuccess();
         _scanHandle.Free();
     }
 

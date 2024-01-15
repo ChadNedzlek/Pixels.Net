@@ -7,6 +7,9 @@ using Pixels.Net.Messages;
 
 namespace Pixels.Net;
 
+/// <summary>
+/// A single pixels die. Returned by <see cref="PixelsManager.StartScan"/>.
+/// </summary>
 public sealed class PixelsDie : IDisposable
 {
     private readonly BlePeripheral _ble;
@@ -23,6 +26,9 @@ public sealed class PixelsDie : IDisposable
 
     public bool IsConnected { get; private set; }
 
+    /// <summary>
+    /// Event triggered when a die is handled or rolled.
+    /// </summary>
     public event Action<PixelsDie, RollState, int> RollStateChanged;
 
     private PixelsDie(BlePeripheral ble)
@@ -30,11 +36,15 @@ public sealed class PixelsDie : IDisposable
         _ble = ble;
     }
 
+    /// <summary>
+    /// Connect to the device, which will cause RollStateChange events to begin
+    /// triggering as well as populate additional fields.
+    /// </summary>
     public async Task ConnectAsync()
     {
-        await _ble.ConnectAsync(DataReceived);
+        await _ble.ConnectAsync(DataReceived).ConfigureAwait(false);
         _ble.SendMessage(new WhoAmIMessage());
-        IAmADieMessage id = await _idReceived.Task;
+        IAmADieMessage id = await _idReceived.Task.ConfigureAwait(false);
         PixelId = id.PixelId;
         LedCount = id.LedCount;
         Type = id.Type;
@@ -47,13 +57,30 @@ public sealed class PixelsDie : IDisposable
         IsConnected = true;
     }
     
+    /// <summary>
+    /// Get an identifier that can be passed to <see cref="PixelsManager.StartScan"/> in order to save a device as
+    /// connected
+    /// </summary>
     public string GetPersistentIdentifier()
     {
         return _ble.GetPersistentId();
     }
 
+    /// <summary>
+    /// Blink the die
+    /// </summary>
+    /// <param name="count">Number of blinks</param>
+    /// <param name="duration">Total duration of entire animation</param>
+    /// <param name="color">Color to blink the die</param>
+    /// <param name="faceMask">Which faces to blink</param>
+    /// <param name="fade">Fade strength (0 = no fade, 1.0 = maximum fade)</param>
+    /// <param name="loop">True to repeat the blinking animation</param>
     public void Blink(int count, TimeSpan duration, Color color, byte faceMask, double fade, bool loop)
     {
+        ArgumentOutOfRangeException.ThrowIfNegative(count);
+        ArgumentOutOfRangeException.ThrowIfLessThan(fade, 0);
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(fade, 1);
+        
         var msg = new BlinkMessage
         {
             Color = color.ToArgb(),

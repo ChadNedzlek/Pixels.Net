@@ -1,6 +1,7 @@
 ﻿// See https://aka.ms/new-console-template for more information
 
 using System;
+using System.Drawing;
 using System.Threading;
 using System.Threading.Tasks;
 using Pixels.Net;
@@ -35,6 +36,7 @@ internal static class Program
                 await die.ConnectAsync();
             }
             Console.WriteLine($"Connected to die {die.PixelId} (color:{die.Colorway}, type:{die.Type}, firmware:{die.BuildTimestamp.ToLocalTime()}");
+            die.Blink(5, TimeSpan.FromSeconds(1), Color.Aqua, 0xFF, 0, false);
         }
     }
 

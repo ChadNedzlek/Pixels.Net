@@ -38,7 +38,7 @@ internal sealed class BlePeripheral : IDisposable
 
     public bool IsConnected => _notifyCallback != null;
 
-    public async Task ConnectAsync(OnNotifyCallback receiveCallback)
+    public Task ConnectAsync(OnNotifyCallback receiveCallback)
     {
         if (_notifyCallback != null)
             throw new InvalidOperationException();
@@ -47,8 +47,7 @@ internal sealed class BlePeripheral : IDisposable
         _receiveCallback = receiveCallback;
         _callbackHandle = GCHandle.Alloc(_notifyCallback);
 
-        await _dispatcher.Execute(Dispatched);
-        return;
+        return _dispatcher.Execute(Dispatched);
 
         void Dispatched()
         {
@@ -86,7 +85,7 @@ internal sealed class BlePeripheral : IDisposable
 
     public async Task DisconnectAsync()
     {
-        await _dispatcher.Execute(() => { NativeMethods.DisconnectPeripheral(_handle).CheckSuccess(); });
+        await _dispatcher.Execute(() => { NativeMethods.DisconnectPeripheral(_handle).CheckSuccess(); }).ConfigureAwait(false);
         _notifyCallback = null;
         _callbackHandle.Free();
     }

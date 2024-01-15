@@ -1,9 +1,7 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
@@ -12,66 +10,11 @@ using Pixels.Net.Interop;
 
 namespace Pixels.Net;
 
-internal class Dispatcher
-{
-    private readonly object _prepareLock = new();
-    private ConcurrentQueue<(Action action, TaskCompletionSource complete)> _queue;
-    private AutoResetEvent _readyEvent;
-
-    internal Task Execute(Action action)
-    {
-        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows) || Thread.CurrentThread.GetApartmentState() == ApartmentState.MTA)
-        {
-            action();
-            return Task.CompletedTask;
-        }
-
-        return SendToDispatcher(action);
-    }
-
-    private Task SendToDispatcher(Action action)
-    {
-        lock (_prepareLock)
-        {
-            if (_queue == null)
-            {
-                _queue = new ConcurrentQueue<(Action action, TaskCompletionSource complete)>();
-                _readyEvent = new AutoResetEvent(false);
-                var t = new Thread(ExecuteQueue);
-                t.Start();
-            }
-        }
-
-        TaskCompletionSource c = new TaskCompletionSource();
-        _queue.Enqueue((action, c));
-        _readyEvent.Set();
-        return c.Task;
-    }
-
-    private void ExecuteQueue()
-    {
-        while(true)
-        {
-            if (_queue.TryDequeue(out (Action action, TaskCompletionSource complete) item))
-            {
-                try
-                {
-                    item.action();
-                    item.complete.SetResult();
-                }
-                catch (Exception e)
-                {
-                    item.complete.SetException(e);
-                }
-            }
-            else
-            {
-                _readyEvent.WaitOne();
-            }
-        }
-    }
-}
-
+/// <summary>
+/// Manager for pixels dice.  All dice should be managed by a single instance of this manager
+/// class created from <see cref="Create"/>. Dice can be found and connected using
+/// <see cref="StartScan"/>
+/// </summary>
 public sealed class PixelsManager : IDisposable
 {
     private readonly BleManager _ble;
@@ -90,30 +33,51 @@ public sealed class PixelsManager : IDisposable
 
     public bool IsScanning => _adapter?.IsScanning ?? false;
     
+    /// <summary>
+    /// Start background scanning. When a die is found, the <see cref="found"/> callback will be invoked,
+    /// passing the un-connected die. To use the die, call <see cref="PixelsDie.ConnectAsync"/>.
+    /// </summary>
+    /// <param name="found">Callback to be executed when a die is found</param>
+    /// <param name="findAll">If true, all pixels dice located will be returned. If false, only dice matching <see cref="savedIdentifiers"/> will be returned.</param>
+    /// <param name="savedIdentifiers">Optional. If set, dice matching these identifiers will be returned more quickly, and always, even if findAll is false.</param>
     public void StartScan(Action<PixelsDie> found, bool findAll, IEnumerable<string> savedIdentifiers = null)
     {
         var adapter = GetAdapter();
         adapter.StartScanning(p => found(PixelsDie.Create(p)), findAll ? IsDie : null, savedIdentifiers);
     }
 
+    /// <summary>
+    /// Scan for pixels devices. When a die is found, it will be returned as part of the enumerable. The scan will
+    /// continue until the cancellationToken is cancelled
+    /// </summary>
+    /// <param name="findAll">True to find and return all devices, false to only find devices in savedIdentifiers list</param>
+    /// <param name="connectAll">True to return all devices in the connected state. False to only connect devices in savedIdentifiers</param>
+    /// <param name="savedIdentifiers">List of devices to return and connect be default (even if findAll is false)</param>
+    /// <param name="cancellationToken">CancellationToken to stop scanning</param>
+    /// <returns>Enumerable of all devices found. If <see cref="connectAll"/> is true or <see cref="savedIdentifiers"/>
+    /// matches a device, the die will already be connected</returns>
     public async IAsyncEnumerable<PixelsDie> ScanAsync(
         bool findAll,
         bool connectAll,
         IEnumerable<string> savedIdentifiers = null,
         [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
+        if (!findAll && savedIdentifiers == null)
+            throw new ArgumentException($"One of {nameof(findAll)} or {nameof(savedIdentifiers)} must be set");
+        
         var adapter = GetAdapter();
         Channel<PixelsDie> channel = Channel.CreateUnbounded<PixelsDie>();
         var saved = savedIdentifiers?.ToHashSet();
-        adapter.StartScanning(p => channel.Writer.TryWrite(PixelsDie.Create(p)), findAll ? IsDie : null, savedIdentifiers);
+        adapter.StartScanning(p => channel.Writer.TryWrite(PixelsDie.Create(p)), findAll ? IsDie : null, saved);
 
-        await using CancellationTokenRegistration reg = cancellationToken.Register(() => adapter.StopScanning());
+        CancellationTokenRegistration reg = cancellationToken.Register(() => adapter.StopScanning());
+        await using ConfiguredAsyncDisposable _ = reg.ConfigureAwait(false);
 
-        await foreach (PixelsDie die in channel.Reader.ReadAllAsync(cancellationToken))
+        await foreach (PixelsDie die in channel.Reader.ReadAllAsync(cancellationToken).ConfigureAwait(false))
         {
             if (connectAll || (saved?.Contains(die.GetPersistentIdentifier()) ?? false))
             {
-                await die.ConnectAsync();
+                await die.ConnectAsync().ConfigureAwait(false);
             }
 
             yield return die;

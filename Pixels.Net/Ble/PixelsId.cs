@@ -9,5 +9,5 @@ internal static class PixelsId
     internal const string WriteCharacteristic = "6e400002-b5a3-f393-e0a9-e50e24dcca9e";
     internal static readonly BleUuid ServiceUuid = new(ServiceId);
     internal static readonly BleUuid NotifyCharacteristicUuid = new(NotifyCharacteristicId);
-    public static readonly BleUuid WriteCharacteristicUuid = new(WriteCharacteristic);
+    internal static readonly BleUuid WriteCharacteristicUuid = new(WriteCharacteristic);
 }
