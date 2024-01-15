@@ -1,8 +1,8 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Pixels.Net", "Pixels.Net\Pixels.Net.csproj", "{C663A62D-72B1-4545-966A-206D276F8542}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VaettirNet.PixelsDice.Net", "VaettirNet.PixelsDice.Net\VaettirNet.PixelsDice.Net.csproj", "{C663A62D-72B1-4545-966A-206D276F8542}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Pixels.Net.Tests", "Pixels.Net.Tests\Pixels.Net.Tests.csproj", "{3202DF97-8B56-4E35-B28A-23A7E4A1631B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VaettirNet.PixelsDice.Net.Tests", "VaettirNet.PixelsDice.Net.Tests\VaettirNet.PixelsDice.Net.Tests.csproj", "{3202DF97-8B56-4E35-B28A-23A7E4A1631B}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CmdLine", "CmdLine\CmdLine.csproj", "{9FD9636E-FAAE-48A0-9327-F617324219B6}"
 EndProject

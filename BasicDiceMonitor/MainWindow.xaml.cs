@@ -5,7 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
-using Pixels.Net;
+using VaettirNet.PixelsDice.Net;
 
 namespace BasicDiceMonitor;
 

@@ -4,7 +4,8 @@ using System;
 using System.Drawing;
 using System.Threading;
 using System.Threading.Tasks;
-using Pixels.Net;
+
+using VaettirNet.PixelsDice.Net;
 
 namespace CmdLine;
 
