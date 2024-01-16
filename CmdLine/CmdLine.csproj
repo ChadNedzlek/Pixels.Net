@@ -1,16 +1,14 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
     <PropertyGroup>
         <OutputType>Exe</OutputType>
-        <TargetFramework>net8.0</TargetFramework>
         <IsPackable>false</IsPackable>
     </PropertyGroup>
-    
-    <ItemGroup>
+
+    <ItemGroup Condition=" '$(IsLocal)' == 'true' ">
         <PackageReference Include="VaettirNet.PixelsDice.Net" Version="99.99.99-local" />
     </ItemGroup>
-
-    <ItemGroup>
+    
+    <ItemGroup Condition=" '$(IsLocal)' != 'true' ">
+        <ProjectReference Include="..\VaettirNet.PixelsDice.Net\VaettirNet.PixelsDice.Net.csproj" />
     </ItemGroup>
-
 </Project>

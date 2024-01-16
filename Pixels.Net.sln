@@ -12,6 +12,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Global", "Global", "{0D1BD1
 	ProjectSection(SolutionItems) = preProject
 		.gitignore = .gitignore
 		nuget.config = nuget.config
+		Directory.Build.props = Directory.Build.props
+		.github\workflows\main-build.yml = .github\workflows\main-build.yml
 	EndProjectSection
 EndProject
 Global
