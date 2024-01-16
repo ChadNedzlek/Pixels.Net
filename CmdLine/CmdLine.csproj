@@ -5,9 +5,12 @@
         <TargetFramework>net8.0</TargetFramework>
         <IsPackable>false</IsPackable>
     </PropertyGroup>
+    
+    <ItemGroup>
+        <PackageReference Include="VaettirNet.PixelsDice.Net" Version="99.99.99-local" />
+    </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\VaettirNet.PixelsDice.Net\VaettirNet.PixelsDice.Net.csproj" />
     </ItemGroup>
 
 </Project>

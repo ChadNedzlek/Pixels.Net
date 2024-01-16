@@ -11,6 +11,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Global", "Global", "{0D1BD126-1939-4122-875E-35EBC836ED18}"
 	ProjectSection(SolutionItems) = preProject
 		.gitignore = .gitignore
+		nuget.config = nuget.config
 	EndProjectSection
 EndProject
 Global

@@ -17,6 +17,9 @@
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
         <PackageTags>gamewithpixels;pixels</PackageTags>
         <PackageReadmeFile>README.md</PackageReadmeFile>
+        <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+        
+        <PackageVersion>99.99.99-local</PackageVersion>
     </PropertyGroup>
 
     <ItemGroup>
