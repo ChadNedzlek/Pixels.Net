@@ -24,6 +24,8 @@ jobs:
     - name: Git Version
       id: version
       uses: codacy/git-version@2.7.1
+      with:
+        release-branch: main
     - name: Restore dependencies
       run: dotnet restore
     - name: Build
