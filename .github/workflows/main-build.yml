@@ -33,6 +33,8 @@ jobs:
       run: dotnet pack --no-build --configuration Release -p:PackageVersion=${{ steps.version.outputs.version }} -p:RepositoryCommit=${{ github.sha }} -o .out/packages
     - name: Tag the commit
       run: |
+        git config --global user.email "no-reply@vaettir.net"
+        git config --global user.name "Tagger"
         git tag -a "v${{ steps.version.outputs.version }}" -m "Version ${{ steps.version.outputs.version }}"
         git push --follow-tags
     - name: Archive production artifacts
