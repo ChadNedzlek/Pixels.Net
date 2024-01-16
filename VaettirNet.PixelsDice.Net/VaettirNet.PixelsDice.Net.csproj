@@ -18,7 +18,7 @@
         <PackageReadmeFile>README.md</PackageReadmeFile>
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
         
-        <PackageVersion>99.99.99-local</PackageVersion>
+        <PackageVersion>$(LocalVersion)</PackageVersion>
     </PropertyGroup>
 
     <ItemGroup>

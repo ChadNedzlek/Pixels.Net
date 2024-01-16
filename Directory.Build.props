@@ -1,0 +1,9 @@
+<Project>
+    <PropertyGroup>
+        <TargetFramework>net8.0</TargetFramework>
+        <LocalVersion>99.99.99-dev</LocalVersion>
+        <IsLocal>true</IsLocal>
+        <RootDir>$(MSBuildThisFileDirectory)</RootDir>
+        <PackageOutputPath>$(RootDir)/.out/packages</PackageOutputPath>
+    </PropertyGroup>
+</Project>

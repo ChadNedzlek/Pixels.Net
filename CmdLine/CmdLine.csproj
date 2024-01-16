@@ -5,7 +5,7 @@
     </PropertyGroup>
 
     <ItemGroup Condition=" '$(IsLocal)' == 'true' ">
-        <PackageReference Include="VaettirNet.PixelsDice.Net" Version="99.99.99-local" />
+        <PackageReference Include="VaettirNet.PixelsDice.Net" Version="$(LocalVersion)" />
     </ItemGroup>
     
     <ItemGroup Condition=" '$(IsLocal)' != 'true' ">
