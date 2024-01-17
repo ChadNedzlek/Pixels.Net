@@ -4,7 +4,7 @@ using VaettirNet.PixelsDice.Net.Interop;
 
 namespace VaettirNet.PixelsDice.Net.Ble;
 
-internal class BleManager
+public class BleManager
 {
     private readonly Dispatcher _dispatcher;
     
@@ -27,26 +27,28 @@ internal class BleManager
         }
     }
 
-    public BleAdapter GetAdapter(int index)
+    internal BleAdapter GetAdapter(int index)
     {
         return new BleAdapter(NativeMethods.GetAdapter((UIntPtr)index), _dispatcher);
     }
 
     public static BleManager Create()
     {
-        #if DEBUG
-        NativeMethods.SetLogLevel(BleLogLevel.Info);
-        #else
-        NativeMethods.SetLogLevel(BleLogLevel.None);
-        #endif
+        NativeMethods.SetLogLevel(_logLevel);
         NativeMethods.SetLogCallback(SimpleBleLog);
         var enabled = NativeMethods.IsBluetoothEnabled();
         return new BleManager(enabled, new Dispatcher());
     }
 
+    private static BleLogLevel _logLevel =
+        #if DEBUG
+        BleLogLevel.Error;
+        #else
+        BleLogLevel.None;
+        #endif
     private static void SimpleBleLog(BleLogLevel level, IntPtr pModule, IntPtr pFile, uint line, IntPtr pFunction, IntPtr pMessage)
     {
-        if (level > BleLogLevel.Error)
+        if (level > _logLevel)
         {
             return;
         }
@@ -57,5 +59,11 @@ internal class BleManager
         string message = Marshal.PtrToStringAnsi(pMessage);
         
         Console.WriteLine($"[{level}] {module}: {file}:{line} in {function}: {message}");
+    }
+
+    public static void SetLogLevel(BleLogLevel level)
+    {
+        _logLevel = level;
+        NativeMethods.SetLogLevel(_logLevel);
     }
 }

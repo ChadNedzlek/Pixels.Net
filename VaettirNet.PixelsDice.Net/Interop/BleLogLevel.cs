@@ -1,6 +1,6 @@
 namespace VaettirNet.PixelsDice.Net.Interop;
 
-internal enum BleLogLevel
+public enum BleLogLevel
 {
     None = 0,
     Fatal,

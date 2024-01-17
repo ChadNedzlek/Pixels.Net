@@ -3,8 +3,10 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Threading;
 using System.Threading.Tasks;
-
+using Mono.Options;
 using VaettirNet.PixelsDice.Net;
+using VaettirNet.PixelsDice.Net.Ble;
+using VaettirNet.PixelsDice.Net.Interop;
 
 namespace CmdLine;
 
@@ -19,12 +21,20 @@ internal static class Program
                 e.Cancel = true;
             exit.Cancel(true);
         };
-        string[] saved = null;
-        if (args.Length > 0)
+
+        BleLogLevel logLevel = BleLogLevel.Error;
+        OptionSet options = new()
         {
-            saved = args;
+            { "verbose|v", "Verbose logging", _ => logLevel = BleLogLevel.Verbose }
+        };
+        var rem = options.Parse(args);
+        List<string> saved = null;
+        if (rem.Count > 0)
+        {
+            saved = rem;
         }
 
+        BleManager.SetLogLevel(logLevel);
         var mgr = PixelsManager.Create();
         List<PixelsDie> found = new();
         try
