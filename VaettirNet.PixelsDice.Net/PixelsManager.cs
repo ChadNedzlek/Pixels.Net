@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
@@ -91,8 +93,15 @@ public sealed class PixelsManager : IDisposable
         static bool? CouldBeDisconnectedDie(SafePeripheralHandle peri)
         {
             var count = NativeMethods.GetServiceCount(peri);
+            if (Logger.Instance.ShouldLog(PixelsLogLevel.Verbose))
+            {
+                var id = NativeMethods.GetPeripheralIdentifier(peri);
+                var address = NativeMethods.GetPeripheralAddress(peri);
+                Logger.Instance.Log(PixelsLogLevel.Verbose, $"Found device (id: {id}, address: {address})");
+            }
+
             bool foundInformationService = false;
-            bool foundPixeslService = false;
+            bool foundPixelsServices = false;
             for (nuint i = 0; i < count; i++)
             {
                 BleService service = new BleService();
@@ -100,9 +109,16 @@ public sealed class PixelsManager : IDisposable
                 if (service.Uuid.Value == PixelsId.InfoServiceId)
                 {
                     foundInformationService = true;
-                } else if (service.Uuid.Value == PixelsId.PixelsServiceId)
+                    Logger.Instance.Log(PixelsLogLevel.Info, "Found Info service");
+                }
+                else if (service.Uuid.Value == PixelsId.PixelsServiceId)
                 {
-                    foundPixeslService = true;
+                    foundPixelsServices = true;
+                    Logger.Instance.Log(PixelsLogLevel.Info, "Found Pixels service");
+                }
+                else
+                {
+                    Logger.Instance.Log(PixelsLogLevel.Verbose, $"Found irrelevant service: {service.Uuid.Value}");
                 }
             }
 
@@ -115,10 +131,15 @@ public sealed class PixelsManager : IDisposable
                 if (data.DataLength == 5)
                 {
                     foundBasicManufacturerData = true;
+                    Logger.Instance.Log(PixelsLogLevel.Info, "Found manufacture data with 5 bytes");
+                }
+                else
+                {
+                    Logger.Instance.Log(PixelsLogLevel.Verbose, $"Found manufacture data with incorrect length {data.DataLength} bytes");
                 }
             }
 
-            if (foundPixeslService && foundInformationService)
+            if (foundPixelsServices && foundInformationService)
                 return true;
             if (foundInformationService && dataCount == 1 && foundBasicManufacturerData)
                 return null;
@@ -130,6 +151,7 @@ public sealed class PixelsManager : IDisposable
             bool foundPixelsService = false;
             bool foundNotifyCharacteristic = false;
             bool foundWriteCharacteristic = false;
+            Logger.Instance.Log(PixelsLogLevel.Verbose, "Connecting to device to scan other services");
             NativeMethods.ConnectPeripheral(peri).CheckSuccess();
             try
             {
@@ -140,19 +162,31 @@ public sealed class PixelsManager : IDisposable
                     NativeMethods.GetService(peri, i, ref service).CheckSuccess();
                     if (service.Uuid.Value == PixelsId.PixelsServiceId)
                     {
+                        Logger.Instance.Log(PixelsLogLevel.Info, "Found active Pixels service");
                         foundPixelsService = true;
                         for (nuint c = 0; c < service.CharacteristicCount; c++)
                         {
                             if (service.Characteristics[c].Uuid.Value == PixelsId.NotifyCharacteristicId)
+                            {
+                                Logger.Instance.Log(PixelsLogLevel.Info, "Found notify characteristic");
                                 foundNotifyCharacteristic = true;
-                            if (service.Characteristics[c].Uuid.Value == PixelsId.WriteCharacteristic)
+                            } else if (service.Characteristics[c].Uuid.Value == PixelsId.WriteCharacteristic)
+                            {
+                                Logger.Instance.Log(PixelsLogLevel.Info, "Found write characteristic");
                                 foundWriteCharacteristic = true;
+                            }
+                            else
+                            {
+                                Logger.Instance.Log(PixelsLogLevel.Verbose,
+                                    $"Found irrelevant characteristic: {service.Characteristics[c].Uuid.Value}");
+                            }
                         }
                     }
                 }
             }
             finally
             {
+                Logger.Instance.Log(PixelsLogLevel.Verbose, "Disconnecting device");
                 NativeMethods.DisconnectPeripheral(peri).CheckSuccess();
             }
 
@@ -172,4 +206,15 @@ public sealed class PixelsManager : IDisposable
     {
         _adapter?.Dispose();
     }
+}
+
+public enum PixelsLogLevel
+{
+    None = 0,
+    Fatal,
+    Error,
+    Warn,
+    Info,
+    Debug,
+    Verbose
 }

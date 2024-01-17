@@ -46,6 +46,7 @@ public class BleManager
         #else
         BleLogLevel.None;
         #endif
+    
     private static void SimpleBleLog(BleLogLevel level, IntPtr pModule, IntPtr pFile, uint line, IntPtr pFunction, IntPtr pMessage)
     {
         if (level > _logLevel)
@@ -53,12 +54,12 @@ public class BleManager
             return;
         }
 
-        string module = Marshal.PtrToStringAnsi(pModule);
         string file = Marshal.PtrToStringAnsi(pFile);
         string function = Marshal.PtrToStringAnsi(pFunction);
         string message = Marshal.PtrToStringAnsi(pMessage);
         
-        Console.WriteLine($"[{level}] {module}: {file}:{line} in {function}: {message}");
+        // ReSharper disable once ExplicitCallerInfoArgument
+        Logger.Instance.Log((PixelsLogLevel)level, message, file, (int)line, function);
     }
 
     public static void SetLogLevel(BleLogLevel level)

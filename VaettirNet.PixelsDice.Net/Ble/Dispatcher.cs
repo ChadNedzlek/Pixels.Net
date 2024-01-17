@@ -52,6 +52,7 @@ internal class Dispatcher
         {
             if (_queue != null) return;
             
+            Logger.Instance.Log(PixelsLogLevel.Info, "Initiating background dispatcher thread to handle thread apartments");
             _queue = new ConcurrentQueue<DispatchRecord>();
             _readyEvent = new AutoResetEvent(false);
             var t = new Thread(ExecuteQueue)

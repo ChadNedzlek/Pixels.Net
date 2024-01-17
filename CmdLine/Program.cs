@@ -22,10 +22,10 @@ internal static class Program
             exit.Cancel(true);
         };
 
-        BleLogLevel logLevel = BleLogLevel.Error;
+        PixelsLogLevel logLevel = PixelsLogLevel.Error;
         OptionSet options = new()
         {
-            { "verbose|v", "Verbose logging", _ => logLevel = BleLogLevel.Verbose }
+            { "verbose|v", "Verbose logging", _ => logLevel = PixelsLogLevel.Verbose }
         };
         var rem = options.Parse(args);
         List<string> saved = null;
@@ -34,7 +34,16 @@ internal static class Program
             saved = rem;
         }
 
-        BleManager.SetLogLevel(logLevel);
+        if (saved != null)
+        {
+            Console.WriteLine("Command line specified the following device IDs (will not find others) :");
+            foreach (var s in saved)
+            {
+                Console.WriteLine($"  {s}");
+            }
+        }
+
+        Logger.SetLogLevel(logLevel);
         var mgr = PixelsManager.Create();
         List<PixelsDie> found = new();
         try
