@@ -1,6 +1,5 @@
-﻿// See https://aka.ms/new-console-template for more information
-
-using System;
+﻿using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Threading;
 using System.Threading.Tasks;
@@ -27,11 +26,13 @@ internal static class Program
         }
 
         var mgr = PixelsManager.Create();
+        List<PixelsDie> found = new();
         try
         {
             Console.WriteLine("Searching for dice (can help to pick up and handle them)");
             await foreach (PixelsDie die in mgr.ScanAsync(saved == null, false, saved, exit.Token))
             {
+                found.Add(die);
                 die.RollStateChanged += DieRolled;
                 if (!die.IsConnected)
                 {
@@ -48,6 +49,14 @@ internal static class Program
         catch (OperationCanceledException) when (exit.IsCancellationRequested)
         {
             Console.WriteLine("Exiting");
+        }
+        finally
+        {
+            foreach (var d in found)
+            {
+                Console.WriteLine($"Disconnecting {d.PixelId}");
+                await d.DisposeAsync();
+            }
         }
     }
 

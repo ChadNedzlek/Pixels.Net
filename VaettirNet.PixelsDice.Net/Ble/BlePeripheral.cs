@@ -8,7 +8,7 @@ using VaettirNet.PixelsDice.Net.Interop;
 
 namespace VaettirNet.PixelsDice.Net.Ble;
 
-internal sealed class BlePeripheral : IDisposable
+internal sealed class BlePeripheral : IDisposable, IAsyncDisposable
 {
     public string Id { get; }
     public string Address { get; }
@@ -25,11 +25,16 @@ internal sealed class BlePeripheral : IDisposable
 
     public void Dispose()
     {
-        _handle.Dispose();
+        DisposeAsync().GetAwaiter().GetResult();
+    }
+
+    public async ValueTask DisposeAsync()
+    {
         if (Interlocked.Exchange(ref _notifyCallback, null) != null)
         {
-            _callbackHandle.Free();
+            await DisconnectAsync();
         }
+        _handle.Dispose();
     }
 
     private NotifyCallback _notifyCallback;

@@ -10,7 +10,7 @@ namespace VaettirNet.PixelsDice.Net;
 /// <summary>
 /// A single pixels die. Returned by <see cref="PixelsManager.StartScan"/>.
 /// </summary>
-public sealed class PixelsDie : IDisposable
+public sealed class PixelsDie : IDisposable, IAsyncDisposable
 {
     private readonly BlePeripheral _ble;
 
@@ -138,6 +138,11 @@ public sealed class PixelsDie : IDisposable
     public void Dispose()
     {
         _ble.Dispose();
+    }
+
+    public ValueTask DisposeAsync()
+    {
+        return _ble.DisposeAsync();
     }
 
     internal static PixelsDie Create(BlePeripheral ble)

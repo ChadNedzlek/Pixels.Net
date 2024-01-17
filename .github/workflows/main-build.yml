@@ -36,7 +36,7 @@ jobs:
       run: |
         git config --global user.email "no-reply@vaettir.net"
         git config --global user.name "Tagger"
-        git tag -a "v${{ steps.version.outputs.version }}" -m "Version ${{ steps.version.outputs.version }}"
+        git tag -a ${{ steps.version.outputs.version }} -m "Version ${{ steps.version.outputs.version }}"
         git push --follow-tags
     - name: Archive production artifacts
       uses: actions/upload-artifact@v3

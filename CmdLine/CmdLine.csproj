@@ -1,14 +1,19 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
+        <TargetFramework>net8.0</TargetFramework>
         <OutputType>Exe</OutputType>
         <IsPackable>false</IsPackable>
+        
+        <UseLocalProject Condition=" '$(IsLocal)' != 'true' ">true</UseLocalProject>
+        <UseLocalProject Condition=" '$(IsWiddows)' == 'true' ">true</UseLocalProject>
+        <UseLocalProject Condition=" '$(UseLocalProject)' == '' ">false</UseLocalProject>
     </PropertyGroup>
 
-    <ItemGroup Condition=" '$(IsLocal)' == 'true' ">
+    <ItemGroup Condition=" '$(UseLocalProject)' != 'true' ">
         <PackageReference Include="VaettirNet.PixelsDice.Net" Version="$(LocalVersion)" />
     </ItemGroup>
     
-    <ItemGroup Condition=" '$(IsLocal)' != 'true' ">
+    <ItemGroup Condition=" '$(UseLocalProject)' == 'true' ">
         <ProjectReference Include="..\VaettirNet.PixelsDice.Net\VaettirNet.PixelsDice.Net.csproj" />
     </ItemGroup>
 </Project>
