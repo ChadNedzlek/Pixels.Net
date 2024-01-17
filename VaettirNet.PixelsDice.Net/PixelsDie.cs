@@ -132,7 +132,10 @@ public sealed class PixelsDie : IDisposable, IAsyncDisposable
 
     private void HandleIAmADie(IAmADieMessage msg)
     {
-        _idReceived.SetResult(msg);
+        if (!_idReceived.TrySetResult(msg))
+        {
+            Logger.Instance.Log(PixelsLogLevel.Info, "Received duplicate IAmADie messages, discarding");
+        }
     }
 
     public void Dispose()
