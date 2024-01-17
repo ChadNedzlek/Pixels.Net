@@ -58,7 +58,7 @@ internal sealed class BlePeripheral : IDisposable, IAsyncDisposable
         {
             NativeMethods.ConnectPeripheral(_handle).CheckSuccess();
             NativeMethods.OnNotify(_handle,
-                    PixelsId.ServiceUuid,
+                    PixelsId.PixelsServiceUuid,
                     PixelsId.NotifyCharacteristicUuid,
                     _notifyCallback,
                     IntPtr.Zero)
@@ -81,7 +81,7 @@ internal sealed class BlePeripheral : IDisposable, IAsyncDisposable
         var buffer = MemoryMarshal.AsBytes(MemoryMarshal.CreateSpan(ref data, 1));
         NativeMethods.WriteRequest(
             _handle,
-            PixelsId.ServiceUuid,
+            PixelsId.PixelsServiceUuid,
             PixelsId.WriteCharacteristicUuid,
             ref buffer[0],
             (UIntPtr)buffer.Length

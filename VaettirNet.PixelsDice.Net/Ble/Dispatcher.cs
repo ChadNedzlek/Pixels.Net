@@ -1,11 +1,14 @@
 using System;
 using System.Collections.Concurrent;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace VaettirNet.PixelsDice.Net.Ble;
+
+internal record struct DispatchRecord(Action Action, TaskCompletionSource Complete, Stopwatch Delay);
 
 /// <summary>
 /// The SimpleBLE library appears to have some thread affinity. In particular,
@@ -16,7 +19,7 @@ namespace VaettirNet.PixelsDice.Net.Ble;
 internal class Dispatcher
 {
     private readonly object _prepareLock = new();
-    private ConcurrentQueue<(Action action, TaskCompletionSource complete)> _queue;
+    private ConcurrentQueue<DispatchRecord> _queue;
     private AutoResetEvent _readyEvent;
 
     internal Task Execute(Action action)
@@ -36,7 +39,7 @@ internal class Dispatcher
         PrepareBackgroundThread();
 
         TaskCompletionSource c = new();
-        _queue.Enqueue((action, c));
+        _queue.Enqueue(new(action, c, Stopwatch.StartNew()));
         _readyEvent.Set();
         return c.Task;
     }
@@ -49,7 +52,7 @@ internal class Dispatcher
         {
             if (_queue != null) return;
             
-            _queue = new ConcurrentQueue<(Action action, TaskCompletionSource complete)>();
+            _queue = new ConcurrentQueue<DispatchRecord>();
             _readyEvent = new AutoResetEvent(false);
             var t = new Thread(ExecuteQueue)
             {
@@ -64,16 +67,16 @@ internal class Dispatcher
     {
         while(true)
         {
-            if (_queue.TryDequeue(out (Action action, TaskCompletionSource complete) item))
+            if (_queue.TryDequeue(out DispatchRecord item))
             {
                 try
                 {
-                    item.action();
-                    item.complete.SetResult();
+                    item.Action();
+                    item.Complete.SetResult();
                 }
                 catch (Exception e)
                 {
-                    item.complete.SetException(e);
+                    item.Complete.SetException(e);
                 }
             }
             else

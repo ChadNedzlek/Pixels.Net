@@ -86,19 +86,23 @@ public sealed class PixelsManager : IDisposable
 
     private bool IsDie(SafePeripheralHandle peripheral)
     {
-        return CouldBeDisconnectedDie(peripheral) && ConnectAndCheck(peripheral);
+        return CouldBeDisconnectedDie(peripheral) ?? ConnectAndCheck(peripheral);
 
-        static bool CouldBeDisconnectedDie(SafePeripheralHandle peri)
+        static bool? CouldBeDisconnectedDie(SafePeripheralHandle peri)
         {
             var count = NativeMethods.GetServiceCount(peri);
             bool foundInformationService = false;
+            bool foundPixeslService = false;
             for (nuint i = 0; i < count; i++)
             {
                 BleService service = new BleService();
                 NativeMethods.GetService(peri, i, ref service).CheckSuccess();
-                if (service.Uuid.Value == "0000180a-0000-1000-8000-00805f9b34fb")
+                if (service.Uuid.Value == PixelsId.InfoServiceId)
                 {
                     foundInformationService = true;
+                } else if (service.Uuid.Value == PixelsId.PixelsServiceId)
+                {
+                    foundPixeslService = true;
                 }
             }
 
@@ -114,7 +118,11 @@ public sealed class PixelsManager : IDisposable
                 }
             }
 
-            return foundInformationService && dataCount == 1 && foundBasicManufacturerData;
+            if (foundPixeslService && foundInformationService)
+                return true;
+            if (foundInformationService && dataCount == 1 && foundBasicManufacturerData)
+                return null;
+            return false;
         }
 
         static bool ConnectAndCheck(SafePeripheralHandle peri)
@@ -130,7 +138,7 @@ public sealed class PixelsManager : IDisposable
                 {
                     BleService service = new BleService();
                     NativeMethods.GetService(peri, i, ref service).CheckSuccess();
-                    if (service.Uuid.Value == PixelsId.ServiceId)
+                    if (service.Uuid.Value == PixelsId.PixelsServiceId)
                     {
                         foundPixelsService = true;
                         for (nuint c = 0; c < service.CharacteristicCount; c++)
