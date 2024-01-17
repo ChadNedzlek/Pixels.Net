@@ -27,11 +27,9 @@ jobs:
     - name: Restore dependencies
       run: dotnet restore -p:IsLocal=false
     - name: Build
-      run: dotnet build --no-restore --configuration Release -p:IsLocal=false -p:Version=${{ steps.version.outputs.version }}
+      run: dotnet build --no-restore --configuration Release -p:IsLocal=false -p:Version=${{ steps.version.outputs.version }} -p:PackageVersion=${{ steps.version.outputs.version }}
     - name: Test
       run: dotnet test --no-build --verbosity normal --configuration Release -p:IsLocal=false
-    - name: Pack
-      run: dotnet pack --no-build --configuration Release -p:PackageVersion=${{ steps.version.outputs.version }} -p:RepositoryCommit=${{ github.sha }} -p:IsLocal=false -o .out/packages 
     - name: Tag the commit
       run: |
         git config --global user.email "no-reply@vaettir.net"
