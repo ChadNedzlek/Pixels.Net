@@ -75,7 +75,7 @@ public sealed class PixelsDie : IDisposable, IAsyncDisposable
     /// <param name="faceMask">Which faces to blink</param>
     /// <param name="fade">Fade strength (0 = no fade, 1.0 = maximum fade)</param>
     /// <param name="loop">True to repeat the blinking animation</param>
-    public void Blink(int count, TimeSpan duration, Color color, byte faceMask, double fade, bool loop)
+    public void Blink(int count, TimeSpan duration, Color color, int faceMask, double fade, bool loop)
     {
         ArgumentOutOfRangeException.ThrowIfNegative(count);
         ArgumentOutOfRangeException.ThrowIfLessThan(fade, 0);

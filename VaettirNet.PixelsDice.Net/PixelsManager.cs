@@ -95,9 +95,9 @@ public sealed class PixelsManager : IDisposable
             var count = NativeMethods.GetServiceCount(peri);
             if (Logger.Instance.ShouldLog(PixelsLogLevel.Verbose))
             {
-                var id = NativeMethods.GetPeripheralIdentifier(peri);
-                var address = NativeMethods.GetPeripheralAddress(peri);
-                Logger.Instance.Log(PixelsLogLevel.Verbose, $"Found device (id: {id}, address: {address})");
+                using StringHandle id = NativeMethods.GetPeripheralIdentifier(peri);
+                using StringHandle address = NativeMethods.GetPeripheralAddress(peri);
+                Logger.Instance.Log(PixelsLogLevel.Verbose, $"Found device (id: {id.Value}, address: {address.Value})");
             }
 
             bool foundInformationService = false;
