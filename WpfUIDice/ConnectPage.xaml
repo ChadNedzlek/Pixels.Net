@@ -1,0 +1,30 @@
+<Page x:Class="WpfUIDice.ConnectPage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+      xmlns:local="clr-namespace:WpfUIDice"
+      xmlns:system="clr-namespace:System;assembly=System.Runtime"
+      mc:Ignorable="d"
+      Title="ConnectPage" Height="450" Width="800">
+    <Grid>
+        <ListView>
+            <ListView.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <WrapPanel Orientation="Horizontal"></WrapPanel>
+                </ItemsPanelTemplate>
+            </ListView.ItemsPanel>
+            <ListView.Items>
+                <system:String>Pizza</system:String>
+                <system:String>Pie</system:String>
+            </ListView.Items>
+            <ListView.ItemTemplate>
+                <DataTemplate>
+                    <Border Height="64" Width="64" Margin="4">
+                        <Label Content="{Binding .}"></Label>
+                    </Border>
+                </DataTemplate>
+            </ListView.ItemTemplate>
+        </ListView>
+    </Grid>
+</Page>

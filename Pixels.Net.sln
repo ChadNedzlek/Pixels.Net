@@ -16,6 +16,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Global", "Global", "{0D1BD1
 		.github\workflows\main-build.yml = .github\workflows\main-build.yml
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WpfUIDice", "WpfUIDice\WpfUIDice.csproj", "{49E86B7E-510D-4443-9AD1-868FD85E49B3}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -38,5 +40,9 @@ Global
 		{71189CE0-65D3-44C4-90CB-68337FA73254}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{71189CE0-65D3-44C4-90CB-68337FA73254}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{71189CE0-65D3-44C4-90CB-68337FA73254}.Release|Any CPU.Build.0 = Release|Any CPU
+		{49E86B7E-510D-4443-9AD1-868FD85E49B3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{49E86B7E-510D-4443-9AD1-868FD85E49B3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{49E86B7E-510D-4443-9AD1-868FD85E49B3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{49E86B7E-510D-4443-9AD1-868FD85E49B3}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

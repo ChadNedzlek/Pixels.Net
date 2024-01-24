@@ -62,7 +62,7 @@ public partial class MainWindow : Window
         }
     }
 
-    private void DieRolled(PixelsDie die, RollState roll, int face)
+    private void DieRolled(PixelsDie die, RollState roll, int value, int face)
     {
         Dispatcher.Invoke(() =>
         {
@@ -72,7 +72,7 @@ public partial class MainWindow : Window
 
             if (roll == RollState.OnFace)
             {
-                view.FinishRolling(face);
+                view.FinishRolling(value);
             }
             else
             {
