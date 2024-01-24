@@ -48,8 +48,19 @@ internal static class Program
         List<PixelsDie> found = new();
         try
         {
-            Console.WriteLine("Searching for dice (can help to pick up and handle them)");
-            await foreach (PixelsDie die in mgr.ScanAsync(saved == null, false, saved, exit.Token))
+            IAsyncEnumerable<PixelsDie> search;
+            if (saved != null)
+            {
+                Console.WriteLine($"Reconnecting to {saved.Count} dice");
+                search = mgr.ReconnectAsync(saved, cancellationToken: exit.Token);
+            }
+            else
+            {
+                Console.WriteLine("Searching for dice (can help to pick up and handle them)");
+                search = mgr.ScanAsync(true, true, cancellationToken: exit.Token);
+            }
+
+            await foreach (PixelsDie die in search)
             {
                 found.Add(die);
                 die.RollStateChanged += DieRolled;
@@ -64,6 +75,8 @@ internal static class Program
                     $"Connected to die {die.PixelId} (color:{die.Colorway}, type:{die.Type}, firmware:{die.BuildTimestamp.ToLocalTime()}");
                 die.Blink(5, TimeSpan.FromSeconds(1), Color.Aqua, 0xFF, 0, false);
             }
+            Console.WriteLine($"Found {found.Count} dice!");
+            await Task.Delay(Timeout.Infinite, exit.Token);
         }
         catch (OperationCanceledException) when (exit.IsCancellationRequested)
         {
@@ -79,8 +92,8 @@ internal static class Program
         }
     }
 
-    private static void DieRolled(PixelsDie die, RollState state, int face)
+    private static void DieRolled(PixelsDie die, RollState state, int value, int face)
     {
-        Console.WriteLine($"Die {die.PixelId} roll state changed to {state} on face {face}");
+        Console.WriteLine($"Die {die.PixelId}: {state} face {value} (index: {face})");
     }
 }

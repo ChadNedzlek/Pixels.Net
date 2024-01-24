@@ -7,6 +7,8 @@ using VaettirNet.PixelsDice.Net.Messages;
 
 namespace VaettirNet.PixelsDice.Net;
 
+public delegate void RollStateChanged(PixelsDie source, RollState state, int value, int index);
+
 /// <summary>
 /// A single pixels die. Returned by <see cref="PixelsManager.StartScan"/>.
 /// </summary>
@@ -29,7 +31,7 @@ public sealed class PixelsDie : IDisposable, IAsyncDisposable
     /// <summary>
     /// Event triggered when a die is handled or rolled.
     /// </summary>
-    public event Action<PixelsDie, RollState, int> RollStateChanged;
+    public event RollStateChanged RollStateChanged;
 
     private PixelsDie(BlePeripheral ble)
     {
@@ -127,7 +129,22 @@ public sealed class PixelsDie : IDisposable, IAsyncDisposable
     {
         CurrentFace = msg.CurrentFace;
         RollState = msg.RollState;
-        RollStateChanged?.Invoke(this, msg.RollState, msg.CurrentFace);
+        RollStateChanged?.Invoke(this, msg.RollState, GetFaceValue(Type, msg.CurrentFace), msg.CurrentFace);
+    }
+
+    public int GetFaceValue(DieType dieType, int value)
+    {
+        return dieType switch
+        {
+            DieType.FD6 => value switch
+                {
+                    2 or 5 => -1,
+                    1 or 6 => 1,
+                    _ => 0,
+                },
+            DieType.D00 => value * 10,
+            _ => value + 1,
+        };
     }
 
     private void HandleIAmADie(IAmADieMessage msg)

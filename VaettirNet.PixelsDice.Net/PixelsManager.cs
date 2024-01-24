@@ -86,6 +86,43 @@ public sealed class PixelsManager : IDisposable
         }
     }
 
+    public void StopScan()
+    {
+        _adapter.StopScanning();
+    }
+
+    public IAsyncEnumerable<PixelsDie> ReconnectAsync(IEnumerable<string> savedIdentifiers, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
+    {
+        timeout ??= TimeSpan.FromSeconds(30);
+        var items = savedIdentifiers.ToList();
+
+        var channel = Channel.CreateUnbounded<PixelsDie>();
+        int count = 0;
+        
+        CancellationTokenSource src = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        src.CancelAfter(timeout.Value);
+        src.Token.Register(() =>
+        {
+            channel.Writer.TryComplete();
+            StopScan();
+        });
+        
+        StartScan(FoundDie, false, items);
+
+        return channel.Reader.ReadAllAsync(cancellationToken);
+
+        void FoundDie(PixelsDie die)
+        {
+            channel.Writer.TryWrite(die);
+            count++;
+            if (count == items.Count)
+            {
+                channel.Writer.TryComplete();
+                StopScan();
+            }
+        }
+    }
+
     private bool IsDie(SafePeripheralHandle peripheral)
     {
         return CouldBeDisconnectedDie(peripheral) ?? ConnectAndCheck(peripheral);
