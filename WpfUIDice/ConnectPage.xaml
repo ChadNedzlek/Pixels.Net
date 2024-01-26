@@ -5,26 +5,130 @@
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
       xmlns:local="clr-namespace:WpfUIDice"
       xmlns:system="clr-namespace:System;assembly=System.Runtime"
+      xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
       mc:Ignorable="d"
-      Title="ConnectPage" Height="450" Width="800">
+      Title="ConnectPage" d:DesignWidth="800" d:DesignHeight="500">
+    <Page.CommandBindings>
+        <CommandBinding Command="local:ConnectPage.SaveCommand" Executed="SaveDie" />
+        <CommandBinding Command="local:ConnectPage.ConnectCommand" Executed="ConnectDie" />
+        <CommandBinding Command="local:ConnectPage.DeleteCommand" Executed="DisconnectDie" />
+    </Page.CommandBindings>
     <Grid>
-        <ListView>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="200" />
+        </Grid.ColumnDefinitions>
+        
+        <ListView Name="ListView" ItemsSource="{Binding RelativeSource={RelativeSource AncestorType=local:ConnectPage}, Path=Dice.Dice}">
             <ListView.ItemsPanel>
                 <ItemsPanelTemplate>
                     <WrapPanel Orientation="Horizontal"></WrapPanel>
                 </ItemsPanelTemplate>
             </ListView.ItemsPanel>
-            <ListView.Items>
-                <system:String>Pizza</system:String>
-                <system:String>Pie</system:String>
-            </ListView.Items>
             <ListView.ItemTemplate>
-                <DataTemplate>
-                    <Border Height="64" Width="64" Margin="4">
-                        <Label Content="{Binding .}"></Label>
+                <DataTemplate DataType="{x:Type local:DieView}">
+                    <Border Height="100" Width="100" Margin="2" BorderBrush="Gray" BorderThickness="1" CornerRadius="6">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="*" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <Image Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" VerticalAlignment="Stretch" Stretch="Uniform">
+                                <Image.Style>
+                                    <Style TargetType="Image">
+                                        <Setter Property="Source" Value="Resources/pixels_white.png" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsConnected}" Value="True">
+                                                <Setter Property="Source" Value="Resources/pixels_color.png" />
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding IsRolling}" Value="False">
+                                                <Setter Property="Opacity" Value="0.2"></Setter>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Image.Style>
+                            </Image>
+                            <Label Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" VerticalAlignment="Center" HorizontalAlignment="Center" Content="{Binding FaceValue}" FontSize="48">
+                                <Label.Style>
+                                    <Style TargetType="Label" BasedOn="{StaticResource {x:Type Label}}">
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsRolling}" Value="True">
+                                                <Setter Property="Visibility" Value="Collapsed" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Label.Style>
+                            </Label>
+                            <ui:Button
+                                Grid.Row="2"
+                                Grid.Column="0"
+                                HorizontalAlignment="Stretch"
+                                VerticalAlignment="Stretch"
+                                Icon="{ui:SymbolIcon Save20}"
+                                Margin="1"
+                                Command="local:ConnectPage.SaveCommand"
+                                CommandParameter="{Binding .}">
+                                <ui:Button.Style>
+                                    <Style TargetType="ui:Button" BasedOn="{StaticResource {x:Type ui:Button}}">
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsSaved}" Value="True">
+                                                <Setter Property="Visibility" Value="Collapsed" />
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding IsConnected}" Value="False">
+                                                <Setter Property="Visibility" Value="Collapsed" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </ui:Button.Style>
+                            </ui:Button>
+                            <ui:Button
+                                Grid.Row="2"
+                                Grid.Column="0"
+                                HorizontalAlignment="Stretch"
+                                VerticalAlignment="Stretch"
+                                Icon="{ui:SymbolIcon BluetoothConnected20}"
+                                Margin="1"
+                                Command="local:ConnectPage.ConnectCommand"
+                                CommandParameter="{Binding .}">
+                                <ui:Button.Style>
+                                    <Style TargetType="ui:Button" BasedOn="{StaticResource {x:Type ui:Button}}">
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsConnected}" Value="True">
+                                                <Setter Property="Visibility" Value="Collapsed" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </ui:Button.Style>
+                            </ui:Button>
+                            <ui:Button
+                                Grid.Row="2"
+                                Grid.Column="1"
+                                HorizontalAlignment="Stretch"
+                                VerticalAlignment="Stretch"
+                                Icon="{ui:SymbolIcon Delete20}"
+                                Margin="1"
+                                Command="local:ConnectPage.DeleteCommand"
+                                CommandParameter="{Binding .}"/>
+                        </Grid>
                     </Border>
                 </DataTemplate>
             </ListView.ItemTemplate>
         </ListView>
+        
+        <Border Grid.Row="0" Grid.Column="1" BorderThickness="2,0,0,0" BorderBrush="Gray" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" >
+            <StackPanel DataContext="{Binding ElementName=ListView, Path=SelectedValue}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                <Label Content="{Binding Die.PixelId}" />
+                <Label Content="{Binding Die.LedCount}" />
+                <Label Content="{Binding Die.Type}" />
+                <Label Content="{Binding Die.Colorway}" />
+                <Label Content="{Binding Die.BuildTimestamp}" />
+                <Label Content="{Binding Die.BatteryLevel}" />
+            </StackPanel>
+        </Border>
     </Grid>
 </Page>

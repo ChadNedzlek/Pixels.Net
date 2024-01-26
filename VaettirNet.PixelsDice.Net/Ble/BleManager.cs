@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Runtime.InteropServices;
+using System.Threading.Tasks;
 using VaettirNet.PixelsDice.Net.Interop;
 
 namespace VaettirNet.PixelsDice.Net.Ble;
@@ -32,12 +33,16 @@ public class BleManager
         return new BleAdapter(NativeMethods.GetAdapter((UIntPtr)index), _dispatcher);
     }
 
-    public static BleManager Create()
+    public static Task<BleManager> CreateAsync()
     {
-        NativeMethods.SetLogLevel(_logLevel);
-        NativeMethods.SetLogCallback(SimpleBleLog);
-        var enabled = NativeMethods.IsBluetoothEnabled();
-        return new BleManager(enabled, new Dispatcher());
+        var dispatcher = new Dispatcher();
+        return dispatcher.Execute(() =>
+        {
+            NativeMethods.SetLogLevel(_logLevel);
+            NativeMethods.SetLogCallback(SimpleBleLog);
+            var enabled = NativeMethods.IsBluetoothEnabled();
+            return new BleManager(enabled, dispatcher);
+        });
     }
 
     private static BleLogLevel _logLevel =

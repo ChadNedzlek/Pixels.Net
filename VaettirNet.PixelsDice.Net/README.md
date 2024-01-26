@@ -7,7 +7,7 @@ A library for interacting with Pixels dice using .NET
 ```csharp
 using VaettirNet.PixelsDice.Net;
 
-var mgr = PixelsManager.Create();
+var mgr = await PixelsManager.CreateAsync();
 await foreach (PixelsDie die in mgr.ScanAsync(findAll:true, connectAll:false, cancellationToken: exit.Token))
 {
     die.RollStateChanged +=

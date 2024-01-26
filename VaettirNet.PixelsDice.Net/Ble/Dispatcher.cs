@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace VaettirNet.PixelsDice.Net.Ble;
 
-internal record struct DispatchRecord(Action Action, TaskCompletionSource Complete, Stopwatch Delay);
+internal record struct DispatchRecord(Func<object> Action, TaskCompletionSource<object> Complete, Stopwatch Delay);
 
 /// <summary>
 /// The SimpleBLE library appears to have some thread affinity. In particular,
@@ -24,22 +24,39 @@ internal class Dispatcher
 
     internal Task Execute(Action action)
     {
-        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows) || Thread.CurrentThread.GetApartmentState() == ApartmentState.MTA)
+        if (IsDispatchRequired)
         {
             // If we are already in an MTA thread, we can just run the code directly, save ourselves a dispatch call.
             action();
             return Task.CompletedTask;
         }
 
-        return SendToDispatcher(action);
+        return SendToDispatcher(() =>
+        {
+            action();
+            return null;
+        });
     }
 
-    private Task SendToDispatcher(Action action)
+    public bool IsDispatchRequired => !RuntimeInformation.IsOSPlatform(OSPlatform.Windows) || Thread.CurrentThread.GetApartmentState() == ApartmentState.MTA;
+
+    internal async Task<T> Execute<T>(Func<T> func)
+    {
+        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows) || Thread.CurrentThread.GetApartmentState() == ApartmentState.MTA)
+        {
+            // If we are already in an MTA thread, we can just run the code directly, save ourselves a dispatch call.
+            return func();
+        }
+
+        return (T) await SendToDispatcher(() => func());
+    }
+
+    private Task<object> SendToDispatcher(Func<object> handler)
     {
         PrepareBackgroundThread();
 
-        TaskCompletionSource c = new();
-        _queue.Enqueue(new(action, c, Stopwatch.StartNew()));
+        TaskCompletionSource<object> c = new();
+        _queue.Enqueue(new(handler, c, Stopwatch.StartNew()));
         _readyEvent.Set();
         return c.Task;
     }
@@ -72,8 +89,7 @@ internal class Dispatcher
             {
                 try
                 {
-                    item.Action();
-                    item.Complete.SetResult();
+                    item.Complete.SetResult(item.Action());
                 }
                 catch (Exception e)
                 {

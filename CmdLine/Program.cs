@@ -44,7 +44,7 @@ internal static class Program
         }
 
         Logger.SetLogLevel(logLevel);
-        var mgr = PixelsManager.Create();
+        var mgr = await PixelsManager.CreateAsync();
         List<PixelsDie> found = new();
         try
         {

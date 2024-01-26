@@ -36,12 +36,9 @@ public partial class MainWindow : Window
     
     public MainWindow()
     {
-        Dice = new ObservableCollection<DieView>();
+        Dice = [];
         InitializeComponent();
-        var t = new Thread(() => _manager = PixelsManager.Create());
-        t.SetApartmentState(ApartmentState.MTA);
-        t.Start();
-        t.Join();
+        Task.Run(async () => _manager = await PixelsManager.CreateAsync());
     }
 
     private void StartScanning(object sender, RoutedEventArgs e)

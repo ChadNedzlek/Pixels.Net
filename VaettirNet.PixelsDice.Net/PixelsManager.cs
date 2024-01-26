@@ -14,7 +14,7 @@ namespace VaettirNet.PixelsDice.Net;
 
 /// <summary>
 /// Manager for pixels dice.  All dice should be managed by a single instance of this manager
-/// class created from <see cref="Create"/>. Dice can be found and connected using
+/// class created from <see cref="CreateAsync"/>. Dice can be found and connected using
 /// <see cref="StartScan"/>
 /// </summary>
 public sealed class PixelsManager : IDisposable
@@ -26,9 +26,9 @@ public sealed class PixelsManager : IDisposable
         _ble = ble;
     }
 
-    public static PixelsManager Create()
+    public static async Task<PixelsManager> CreateAsync()
     {
-        return new(BleManager.Create());
+        return new(await BleManager.CreateAsync());
     }
 
     private BleAdapter _adapter;

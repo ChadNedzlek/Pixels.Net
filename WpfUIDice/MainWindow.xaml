@@ -13,25 +13,53 @@
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
         <ui:TitleBar Grid.Row="0" Title="Pixels Die Scanner" Height="24" />
-        <ui:NavigationView Grid.Row="1" PaneDisplayMode="LeftFluent">
-            <ui:NavigationView.MenuItems>
-                <ui:NavigationViewItem Content="Home" Icon="{ui:SymbolIcon Home24}" />
-                <ui:NavigationViewItem Content="Connect" Icon="{ui:SymbolIcon Bluetooth24}" TargetPageType="{x:Type local:ConnectPage}" />
-            </ui:NavigationView.MenuItems>
+        <ui:NavigationView Grid.Row="1" PaneDisplayMode="LeftFluent" Name="NavigationView">
             <ui:NavigationView.Header>
-                <Grid>
+                <Grid Margin="2">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="90" />
                         <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
-                    <Button Grid.Column="1">
-                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                            <Label Content="Connecting" Margin="0,0,10,0"></Label>
-                            <ui:ProgressRing IsIndeterminate="True" Height="24" Width="24"></ui:ProgressRing>
-                        </StackPanel>
-                    </Button>
+                    <ui:ProgressRing Grid.Column="2" Width="24" Height="24" Margin="4" IsIndeterminate="True">
+                        <ui:ProgressRing.Style>
+                            <Style TargetType="ui:ProgressRing" BasedOn="{StaticResource {x:Type ui:ProgressRing}}">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding RelativeSource={RelativeSource AncestorType=local:MainWindow}, Path=IsScanning}" Value="False">
+                                        <Setter Property="Visibility" Value="Hidden"></Setter>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </ui:ProgressRing.Style>
+                    </ui:ProgressRing>
+                    <ui:Button Grid.Column="1" Click="StopScan" Content="Scanning" HorizontalAlignment="Stretch">
+                        <Button.Style>
+                            <Style TargetType="ui:Button" BasedOn="{StaticResource {x:Type ui:Button}}">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding RelativeSource={RelativeSource AncestorType=local:MainWindow}, Path=IsScanning}" Value="False">
+                                        <Setter Property="Visibility" Value="Collapsed"></Setter>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Button.Style>
+                    </ui:Button>
+                    <ui:Button Grid.Column="1" Click="StartScan" Content="Scan" HorizontalAlignment="Stretch">
+                        <Button.Style>
+                            <Style TargetType="ui:Button" BasedOn="{StaticResource {x:Type ui:Button}}">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding RelativeSource={RelativeSource AncestorType=local:MainWindow}, Path=IsScanning}" Value="True">
+                                        <Setter Property="Visibility" Value="Collapsed"></Setter>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Button.Style>
+                    </ui:Button>
                 </Grid>
             </ui:NavigationView.Header>
+            <ui:NavigationView.MenuItems>
+                <ui:NavigationViewItem Content="Connect" Icon="{ui:SymbolIcon Bluetooth24}" TargetPageType="{x:Type local:ConnectPage}" />
+                <ui:NavigationViewItem Content="Logs" Icon="{ui:SymbolIcon DocumentOnePage24}" TargetPageType="{x:Type local:LogPage}" />
+            </ui:NavigationView.MenuItems>
         </ui:NavigationView>
     </Grid>
 </ui:FluentWindow>

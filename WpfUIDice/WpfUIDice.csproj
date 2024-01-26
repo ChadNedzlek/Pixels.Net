@@ -3,13 +3,26 @@
     <PropertyGroup>
         <OutputType>WinExe</OutputType>
         <TargetFramework>net8.0-windows</TargetFramework>
-        <Nullable>enable</Nullable>
-        <ImplicitUsings>enable</ImplicitUsings>
         <UseWPF>true</UseWPF>
     </PropertyGroup>
 
     <ItemGroup>
       <PackageReference Include="WPF-UI" Version="3.0.0-preview.13" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\VaettirNet.PixelsDice.Net\VaettirNet.PixelsDice.Net.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Remove="Resources\Pixels Icon_Color Icon_No BG_September 2021.png" />
+      <Resource Include="Resources\pixels_color.png">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Resource>
+      <None Remove="Resources\Pixels Icon_White Icon_No BG_September 2021.png" />
+      <Resource Include="Resources\pixels_white.png">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Resource>
     </ItemGroup>
 
 </Project>

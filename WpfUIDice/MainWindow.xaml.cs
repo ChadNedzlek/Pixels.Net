@@ -1,4 +1,10 @@
-﻿using System.Windows;
+﻿using System;
+using System.Collections.ObjectModel;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Windows;
+using VaettirNet.PixelsDice.Net;
 using Wpf.Ui.Controls;
 
 namespace WpfUIDice;
@@ -11,7 +17,7 @@ public partial class MainWindow : FluentWindow
     public static readonly DependencyProperty DiceProperty = DependencyProperty.Register(
         nameof(Dice),
         typeof(DiceCollection),
-        typeof(ConnectPage),
+        typeof(MainWindow),
         new PropertyMetadata(default(DiceCollection)));
 
     public DiceCollection Dice
@@ -19,10 +25,66 @@ public partial class MainWindow : FluentWindow
         get => (DiceCollection)GetValue(DiceProperty);
         set => SetValue(DiceProperty, value);
     }
+
+    public static readonly DependencyProperty IsScanningProperty = DependencyProperty.Register(
+        nameof(IsScanning),
+        typeof(bool),
+        typeof(MainWindow),
+        new PropertyMetadata(default(bool)));
+
+    public bool IsScanning
+    {
+        get => (bool)GetValue(IsScanningProperty);
+        set => SetValue(IsScanningProperty, value);
+    }
+    
+    private PixelsManager _manager;
     
     public MainWindow()
     {
         Dice = (DiceCollection)Application.Current.FindResource("DiceCollection")!;
+        Dice.Dice = new ObservableCollection<DieView>();
+        Dice.Log = new ObservableCollection<string>();
+        Task.Run(async () => _manager = await PixelsManager.CreateAsync());
         InitializeComponent();
+        NavigationView.Loaded += (_, _) =>
+            NavigationView.Navigate(((NavigationViewItem)NavigationView.MenuItems[0]).TargetPageType);
+    }
+
+    private CancellationTokenSource _scanStop;
+    private void StopScan(object sender, RoutedEventArgs e)
+    {
+        IsScanning = false;
+        _scanStop?.Cancel();
+        _scanStop = null;
+    }
+
+    private async void StartScan(object sender, RoutedEventArgs e)
+    {
+        if (_manager == null)
+            return;
+        _scanStop = new CancellationTokenSource();
+        Dice.Log.Add("Scan started.");
+        IsScanning = true;
+        CancellationToken stopToken = _scanStop.Token;
+        try
+        {
+            await foreach (PixelsDie die in _manager.ScanAsync(true, false, cancellationToken: stopToken))
+            {
+                if (Dice.Dice.Any(d => d.Die.PixelId == die.PixelId))
+                {
+                    await die.DisposeAsync();
+                    continue;
+                }
+
+                Dice.Log.Add($"Found die {die.LedCount}");
+                Dice.Dice.Add(new DieView(die, false));
+            }
+        }
+        catch (OperationCanceledException) when (stopToken.IsCancellationRequested)
+        {
+            Dice.Log.Add("Scan stopped.");
+            // Ignore
+        }
     }
 }
