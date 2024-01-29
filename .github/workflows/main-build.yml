@@ -11,34 +11,34 @@ jobs:
     permissions:
       contents: write
     steps:
-    - uses: actions/checkout@v3
-      with:
-        ref: ${{ github.head_ref }}
-        fetch-depth: 0
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v3
-      with:
-        dotnet-version: 8.0.x
-    - name: Git Version
-      id: version
-      uses: codacy/git-version@2.7.1
-      with:
-        release-branch: main
-    - name: Restore dependencies
-      run: dotnet restore -p:IsLocal=false
-    - name: Build
-      run: dotnet build --no-restore --configuration Release -p:IsLocal=false -p:Version=${{ steps.version.outputs.version }} -p:PackageVersion=${{ steps.version.outputs.version }}
-    - name: Test
-      run: dotnet test --no-build --verbosity normal --configuration Release -p:IsLocal=false
-    - name: Tag the commit
-      run: |
-        git config --global user.email "no-reply@vaettir.net"
-        git config --global user.name "Tagger"
-        git tag -a ${{ steps.version.outputs.version }} -m "Version ${{ steps.version.outputs.version }}"
-        git push --follow-tags
-    - name: Archive production artifacts
-      uses: actions/upload-artifact@v3
-      with:
-        name: packages
-        path: |
-          .out/packages
+      - uses: actions/checkout@v3
+        with:
+          ref: ${{ github.head_ref }}
+          fetch-depth: 0
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: 8.0.x
+      - name: Git Version
+        id: version
+        uses: codacy/git-version@2.7.1
+        with:
+          release-branch: main
+      - name: Restore dependencies
+        run: dotnet restore -p:IsLocal=false
+      - name: Build
+        run: dotnet build --no-restore --configuration Release -p:IsLocal=false -p:Version=${{ steps.version.outputs.version }} -p:PackageVersion=${{ steps.version.outputs.version }}
+      - name: Test
+        run: dotnet test --no-build --verbosity normal --configuration Release -p:IsLocal=false
+      - name: Tag the commit
+        run: |
+          git config --global user.email "no-reply@vaettir.net"
+          git config --global user.name "Tagger"
+          git tag -a ${{ steps.version.outputs.version }} -m "Version ${{ steps.version.outputs.version }}"
+          git push --follow-tags
+      - name: Archive production artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: packages
+          path: |
+            .out/packages

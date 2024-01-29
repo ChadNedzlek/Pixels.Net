@@ -1,4 +1,3 @@
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -11,31 +10,31 @@ public partial class ConnectPage : Page
     public static readonly RoutedCommand ConnectCommand = new();
     public static readonly RoutedCommand SaveCommand = new();
     public static readonly RoutedCommand DeleteCommand = new();
-    
+
     public static readonly DependencyProperty DiceProperty = DependencyProperty.Register(
         nameof(Dice),
         typeof(DiceCollection),
         typeof(ConnectPage),
         new PropertyMetadata(default(DiceCollection)));
 
-    public DiceCollection Dice
-    {
-        get => (DiceCollection)GetValue(DiceProperty);
-        set => SetValue(DiceProperty, value);
-    }
-    
     public ConnectPage()
     {
         Dice = (DiceCollection)Application.Current.FindResource("DiceCollection")!;
         InitializeComponent();
     }
 
+    public DiceCollection Dice
+    {
+        get => (DiceCollection)GetValue(DiceProperty);
+        set => SetValue(DiceProperty, value);
+    }
+
     private void SaveDie(object sender, ExecutedRoutedEventArgs e)
     {
         if (e.Parameter is not DieView die) return;
-        
+
         Dice.Log.Add($"Saved die {die.Die.PixelId} as {die.Die.GetPersistentIdentifier()}");
-        
+
         die.Save();
     }
 
@@ -45,7 +44,7 @@ public partial class ConnectPage : Page
 
         die.Die.RollStateChanged += (source, state, value, index) => DieStateChanged(die, source, state, value, index);
         await die.Die.ConnectAsync();
-        
+
         Dice.Log.Add($"Connected die {die.Die.PixelId} s{die.Die.LedCount} (Firmware: {die.Die.BuildTimestamp})");
 
         die.Connect();

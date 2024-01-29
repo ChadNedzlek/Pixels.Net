@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -10,7 +9,7 @@ using Wpf.Ui.Controls;
 namespace WpfUIDice;
 
 /// <summary>
-/// Interaction logic for MainWindow.xaml
+///     Interaction logic for MainWindow.xaml
 /// </summary>
 public partial class MainWindow : FluentWindow
 {
@@ -20,38 +19,37 @@ public partial class MainWindow : FluentWindow
         typeof(MainWindow),
         new PropertyMetadata(default(DiceCollection)));
 
-    public DiceCollection Dice
-    {
-        get => (DiceCollection)GetValue(DiceProperty);
-        set => SetValue(DiceProperty, value);
-    }
-
     public static readonly DependencyProperty IsScanningProperty = DependencyProperty.Register(
         nameof(IsScanning),
         typeof(bool),
         typeof(MainWindow),
         new PropertyMetadata(default(bool)));
 
-    public bool IsScanning
-    {
-        get => (bool)GetValue(IsScanningProperty);
-        set => SetValue(IsScanningProperty, value);
-    }
-    
     private PixelsManager _manager;
-    
+
+    private CancellationTokenSource _scanStop;
+
     public MainWindow()
     {
         Dice = (DiceCollection)Application.Current.FindResource("DiceCollection")!;
-        Dice.Dice = new ObservableCollection<DieView>();
-        Dice.Log = new ObservableCollection<string>();
         Task.Run(async () => _manager = await PixelsManager.CreateAsync());
         InitializeComponent();
         NavigationView.Loaded += (_, _) =>
             NavigationView.Navigate(((NavigationViewItem)NavigationView.MenuItems[0]).TargetPageType);
     }
 
-    private CancellationTokenSource _scanStop;
+    public DiceCollection Dice
+    {
+        get => (DiceCollection)GetValue(DiceProperty);
+        set => SetValue(DiceProperty, value);
+    }
+
+    public bool IsScanning
+    {
+        get => (bool)GetValue(IsScanningProperty);
+        set => SetValue(IsScanningProperty, value);
+    }
+
     private void StopScan(object sender, RoutedEventArgs e)
     {
         IsScanning = false;

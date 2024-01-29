@@ -7,7 +7,8 @@
       mc:Ignorable="d"
       Title="Log" d:DesignWidth="800" d:DesignHeight="500">
     <Grid>
-        <ListBox ItemsSource="{Binding RelativeSource={RelativeSource AncestorType=local:LogPage}, Path=Dice.Log}" AlternationCount="2">
+        <ListBox ItemsSource="{Binding RelativeSource={RelativeSource AncestorType=local:LogPage}, Path=Dice.Log}"
+                 AlternationCount="2">
             <ListBox.ItemContainerStyle>
                 <Style TargetType="{x:Type ListBoxItem}" BasedOn="{StaticResource {x:Type ListBoxItem}}">
                     <Setter Property="Padding" Value="0" />

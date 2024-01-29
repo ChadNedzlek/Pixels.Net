@@ -3,7 +3,7 @@
     <PropertyGroup>
         <RootNamespace>VaettirNet.PixelsDice.Net</RootNamespace>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-        
+
         <Description>Cross-platform library for interacting with Pixels dice from .NET, using SimpleBle</Description>
         <Copyright>Chad Nedzlek 2024</Copyright>
         <Authors>Chad Nedzlek</Authors>
@@ -14,7 +14,7 @@
         <PackageTags>gamewithpixels;pixels</PackageTags>
         <PackageReadmeFile>README.md</PackageReadmeFile>
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-        
+
         <PackageVersion>$(LocalVersion)</PackageVersion>
     </PropertyGroup>
 
@@ -27,9 +27,9 @@
             <CopyToOutputDirectory Condition=" '$(IsLinux)' == 'true' ">PreserveNewest</CopyToOutputDirectory>
             <Link Condition=" '$(IsLinux)' == 'true' ">%(Filename)%(Extension)</Link>
         </None>
-        <None Include="runtimes/osx-x64/*" Pack="true" PackagePath="runtimes/osx-x64/native/" />
-        <None Include="runtimes/osx-arm64/*" Pack="true" PackagePath="runtimes/osx-arm64/native/" />
-        <None Include="README.md" Pack="true" PackagePath="/" />
+        <None Include="runtimes/osx-x64/*" Pack="true" PackagePath="runtimes/osx-x64/native/"/>
+        <None Include="runtimes/osx-arm64/*" Pack="true" PackagePath="runtimes/osx-arm64/native/"/>
+        <None Include="README.md" Pack="true" PackagePath="/"/>
     </ItemGroup>
 
 </Project>

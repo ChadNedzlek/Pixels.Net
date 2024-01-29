@@ -1,7 +1,7 @@
 ﻿namespace VaettirNet.PixelsDice.Net.Interop;
 
-public enum CallResult : int
+public enum CallResult
 {
     Success = 0,
-    Failure = 1,
+    Failure = 1
 }

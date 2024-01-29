@@ -5,13 +5,13 @@ using System.Threading;
 using System.Threading.Tasks;
 using Mono.Options;
 using VaettirNet.PixelsDice.Net;
-using VaettirNet.PixelsDice.Net.Ble;
-using VaettirNet.PixelsDice.Net.Interop;
 
 namespace CmdLine;
 
 internal static class Program
 {
+    private static PixelsLogLevel _logLevel;
+
     public static async Task Main(string[] args)
     {
         CancellationTokenSource exit = new();
@@ -22,10 +22,12 @@ internal static class Program
             exit.Cancel(true);
         };
 
-        PixelsLogLevel logLevel = PixelsLogLevel.Error;
+        _logLevel = PixelsLogLevel.Error;
+        List<string> urls = [];
         OptionSet options = new()
         {
-            { "verbose|v", "Verbose logging", _ => logLevel = PixelsLogLevel.Verbose }
+            { "verbose|v", "Verbose logging", _ => _logLevel = PixelsLogLevel.Verbose },
+            { "url|u=", "URL to forward roll events", urls.Add },
         };
         var rem = options.Parse(args);
         List<string> saved = null;
@@ -43,9 +45,21 @@ internal static class Program
             }
         }
 
-        Logger.SetLogLevel(logLevel);
+        DieSender sender = null;
+
+        Logger.SetLogLevel(_logLevel);
         var mgr = await PixelsManager.CreateAsync();
         List<PixelsDie> found = new();
+        if (urls.Count != 0)
+        {
+            sender = new DieSender();
+            foreach (var u in urls)
+            {
+                Console.WriteLine($"Forwarding rolls to {u}");
+                sender.AddUrl(u);
+            }
+        }
+
         try
         {
             IAsyncEnumerable<PixelsDie> search;
@@ -70,6 +84,8 @@ internal static class Program
                     Console.WriteLine("Connecting to die...");
                     await die.ConnectAsync();
                 }
+                
+                sender?.AddDie(die);
 
                 Console.WriteLine(
                     $"Connected to die {die.PixelId} (color:{die.Colorway}, type:{die.Type}, firmware:{die.BuildTimestamp.ToLocalTime()}");
@@ -84,6 +100,9 @@ internal static class Program
         }
         finally
         {
+            if (sender != null)
+                await sender.DisposeAsync();
+            
             foreach (var d in found)
             {
                 Console.WriteLine($"Disconnecting {d.PixelId}");
@@ -94,6 +113,7 @@ internal static class Program
 
     private static void DieRolled(PixelsDie die, RollState state, int value, int face)
     {
-        Console.WriteLine($"Die {die.PixelId}: {state} face {value} (index: {face})");
+        if (_logLevel > PixelsLogLevel.Info || state == RollState.OnFace)
+            Console.WriteLine($"Die {die.PixelId}: {state} face {value} (index: {face})");
     }
 }

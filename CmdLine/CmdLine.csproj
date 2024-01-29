@@ -3,7 +3,7 @@
         <TargetFramework>net8.0</TargetFramework>
         <OutputType>Exe</OutputType>
         <IsPackable>false</IsPackable>
-        
+
         <UseLocalProject Condition=" '$(IsLocal)' != 'true' ">true</UseLocalProject>
         <UseLocalProject Condition=" '$(IsWindows)' == 'true' ">true</UseLocalProject>
         <UseLocalProject Condition=" '$(UseLocalProject)' == '' ">false</UseLocalProject>
@@ -11,18 +11,18 @@
     </PropertyGroup>
 
     <ItemGroup Condition=" '$(UseLocalProject)' != 'true' ">
-        <PackageReference Include="VaettirNet.PixelsDice.Net" Version="$(PixelsPackageVersion)" />
+        <PackageReference Include="VaettirNet.PixelsDice.Net" Version="$(PixelsPackageVersion)"/>
     </ItemGroup>
-    
+
     <ItemGroup Condition=" '$(UseLocalProject)' == 'true' ">
-        <ProjectReference Include="..\VaettirNet.PixelsDice.Net\VaettirNet.PixelsDice.Net.csproj" />
+        <ProjectReference Include="..\VaettirNet.PixelsDice.Net\VaettirNet.PixelsDice.Net.csproj"/>
     </ItemGroup>
-    
+
     <ItemGroup>
-      <PackageReference Include="Mono.Options" Version="6.12.0.148" />
+        <PackageReference Include="Mono.Options" Version="6.12.0.148"/>
     </ItemGroup>
-    
+
     <ItemGroup>
-      <ProjectReference Include="..\VaettirNet.PixelsDice.Net\VaettirNet.PixelsDice.Net.csproj" />
+        <ProjectReference Include="..\VaettirNet.PixelsDice.Net\VaettirNet.PixelsDice.Net.csproj"/>
     </ItemGroup>
 </Project>

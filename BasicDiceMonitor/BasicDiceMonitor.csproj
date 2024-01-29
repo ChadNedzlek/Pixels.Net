@@ -9,7 +9,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\VaettirNet.PixelsDice.Net\VaettirNet.PixelsDice.Net.csproj" />
+        <ProjectReference Include="..\VaettirNet.PixelsDice.Net\VaettirNet.PixelsDice.Net.csproj"/>
     </ItemGroup>
 
 </Project>

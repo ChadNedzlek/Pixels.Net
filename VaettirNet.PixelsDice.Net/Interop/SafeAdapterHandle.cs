@@ -9,11 +9,11 @@ public class SafeAdapterHandle : SafeHandle
     {
     }
 
+    public override bool IsInvalid => handle == IntPtr.Zero;
+
     protected override bool ReleaseHandle()
     {
         NativeMethods.ReleaseAdapter(handle);
         return true;
     }
-
-    public override bool IsInvalid => handle == IntPtr.Zero;
 }

@@ -5,18 +5,16 @@ namespace VaettirNet.PixelsDice.Net.Interop;
 
 public static class CallResultExtensions
 {
-    public static void CheckSuccess(this CallResult result, [CallerArgumentExpression(nameof(result))] string name = null)
+    public static void CheckSuccess(this CallResult result,
+        [CallerArgumentExpression(nameof(result))] string name = null)
     {
-        string baseName = "ble method";
+        var baseName = "ble method";
         name ??= "";
-        var idx = name.IndexOf(nameof(NativeMethods) + '.', StringComparison.Ordinal);
+        int idx = name.IndexOf(nameof(NativeMethods) + '.', StringComparison.Ordinal);
         if (idx != -1)
         {
-            var pi = name.IndexOf('(', idx);
-            if (pi != -1)
-            {
-                baseName = name[idx..pi];
-            }
+            int pi = name.IndexOf('(', idx);
+            if (pi != -1) baseName = name[idx..pi];
         }
 
         if (result == CallResult.Failure)

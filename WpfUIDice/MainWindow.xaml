@@ -25,8 +25,10 @@
                         <ui:ProgressRing.Style>
                             <Style TargetType="ui:ProgressRing" BasedOn="{StaticResource {x:Type ui:ProgressRing}}">
                                 <Style.Triggers>
-                                    <DataTrigger Binding="{Binding RelativeSource={RelativeSource AncestorType=local:MainWindow}, Path=IsScanning}" Value="False">
-                                        <Setter Property="Visibility" Value="Hidden"></Setter>
+                                    <DataTrigger
+                                        Binding="{Binding RelativeSource={RelativeSource AncestorType=local:MainWindow}, Path=IsScanning}"
+                                        Value="False">
+                                        <Setter Property="Visibility" Value="Hidden" />
                                     </DataTrigger>
                                 </Style.Triggers>
                             </Style>
@@ -36,8 +38,10 @@
                         <Button.Style>
                             <Style TargetType="ui:Button" BasedOn="{StaticResource {x:Type ui:Button}}">
                                 <Style.Triggers>
-                                    <DataTrigger Binding="{Binding RelativeSource={RelativeSource AncestorType=local:MainWindow}, Path=IsScanning}" Value="False">
-                                        <Setter Property="Visibility" Value="Collapsed"></Setter>
+                                    <DataTrigger
+                                        Binding="{Binding RelativeSource={RelativeSource AncestorType=local:MainWindow}, Path=IsScanning}"
+                                        Value="False">
+                                        <Setter Property="Visibility" Value="Collapsed" />
                                     </DataTrigger>
                                 </Style.Triggers>
                             </Style>
@@ -47,8 +51,10 @@
                         <Button.Style>
                             <Style TargetType="ui:Button" BasedOn="{StaticResource {x:Type ui:Button}}">
                                 <Style.Triggers>
-                                    <DataTrigger Binding="{Binding RelativeSource={RelativeSource AncestorType=local:MainWindow}, Path=IsScanning}" Value="True">
-                                        <Setter Property="Visibility" Value="Collapsed"></Setter>
+                                    <DataTrigger
+                                        Binding="{Binding RelativeSource={RelativeSource AncestorType=local:MainWindow}, Path=IsScanning}"
+                                        Value="True">
+                                        <Setter Property="Visibility" Value="Collapsed" />
                                     </DataTrigger>
                                 </Style.Triggers>
                             </Style>
@@ -57,8 +63,12 @@
                 </Grid>
             </ui:NavigationView.Header>
             <ui:NavigationView.MenuItems>
-                <ui:NavigationViewItem Content="Connect" Icon="{ui:SymbolIcon Bluetooth24}" TargetPageType="{x:Type local:ConnectPage}" />
-                <ui:NavigationViewItem Content="Logs" Icon="{ui:SymbolIcon DocumentOnePage24}" TargetPageType="{x:Type local:LogPage}" />
+                <ui:NavigationViewItem Content="Connect" Icon="{ui:SymbolIcon Bluetooth24}"
+                                       TargetPageType="{x:Type local:ConnectPage}" />
+                <ui:NavigationViewItem Content="Logs" Icon="{ui:SymbolIcon DocumentOnePage24}"
+                                       TargetPageType="{x:Type local:LogPage}" />
+                <ui:NavigationViewItem Content="Send" Icon="{ui:SymbolIcon CloudFlow24}"
+                                       TargetPageType="{x:Type local:ProxyPage}" />
             </ui:NavigationView.MenuItems>
         </ui:NavigationView>
     </Grid>

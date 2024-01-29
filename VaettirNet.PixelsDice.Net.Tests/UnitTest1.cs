@@ -1,4 +1,3 @@
-using System.Threading.Tasks;
 using NUnit.Framework;
 
 namespace VaettirNet.PixelsDice.Net.Tests;

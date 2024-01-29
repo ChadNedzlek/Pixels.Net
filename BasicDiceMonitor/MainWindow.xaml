@@ -17,7 +17,8 @@
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
         <ToggleButton Grid.Row="0" Grid.Column="0" Content="Scanning" Checked="StartScanning" Unchecked="StopScanning" />
-        <ItemsControl Grid.Row="1" Grid.Column="0" ItemsSource="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=local:MainWindow}, Path=Dice}">
+        <ItemsControl Grid.Row="1" Grid.Column="0"
+                      ItemsSource="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=local:MainWindow}, Path=Dice}">
             <ItemsControl.ItemsPanel>
                 <ItemsPanelTemplate>
                     <WrapPanel />
@@ -28,19 +29,32 @@
                     <Border Padding="5" BorderThickness="1" CornerRadius="4" BorderBrush="Gray">
                         <Grid>
                             <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto"></RowDefinition>
-                                <RowDefinition Height="Auto"></RowDefinition>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
                             </Grid.RowDefinitions>
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"></ColumnDefinition>
-                                <ColumnDefinition Width="*"></ColumnDefinition>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
                             </Grid.ColumnDefinitions>
-                            <Label Grid.Row="0" Grid.Column="0" Content="{Binding LedCount}" Margin="2"/>
-                            <Label Grid.Row="0" Grid.Column="1" Content="..." Visibility="{Binding RollingVisibility}" Margin="2" />
-                            <Label Grid.Row="0" Grid.Column="1" Content="{Binding FaceValue}" Visibility="{Binding ValueVisibility}" Margin="2"/>
-                            <Button Grid.Row="1" Grid.Column="0" Command="{x:Static local:MainWindow.ForgetDieCommand}" CommandParameter="{Binding .}" Margin="2">Forget</Button>
-                            <Button Grid.Row="1" Grid.Column="1" Visibility="{Binding ConnectVisibility}" Command="{x:Static local:MainWindow.ConnectDieCommand}" CommandParameter="{Binding .}" Margin="2">Connect</Button>
-                            <Button Grid.Row="1" Grid.Column="1" Visibility="{Binding SaveVisibility}" Command="{x:Static local:MainWindow.SaveDieCommand}" CommandParameter="{Binding .}" Margin="2">Save</Button>
+                            <Label Grid.Row="0" Grid.Column="0" Content="{Binding LedCount}" Margin="2" />
+                            <Label Grid.Row="0" Grid.Column="1" Content="..." Visibility="{Binding RollingVisibility}"
+                                   Margin="2" />
+                            <Label Grid.Row="0" Grid.Column="1" Content="{Binding FaceValue}"
+                                   Visibility="{Binding ValueVisibility}" Margin="2" />
+                            <Button Grid.Row="1" Grid.Column="0" Command="{x:Static local:MainWindow.ForgetDieCommand}"
+                                    CommandParameter="{Binding .}" Margin="2">
+                                Forget
+                            </Button>
+                            <Button Grid.Row="1" Grid.Column="1" Visibility="{Binding ConnectVisibility}"
+                                    Command="{x:Static local:MainWindow.ConnectDieCommand}"
+                                    CommandParameter="{Binding .}" Margin="2">
+                                Connect
+                            </Button>
+                            <Button Grid.Row="1" Grid.Column="1" Visibility="{Binding SaveVisibility}"
+                                    Command="{x:Static local:MainWindow.SaveDieCommand}" CommandParameter="{Binding .}"
+                                    Margin="2">
+                                Save
+                            </Button>
                         </Grid>
                     </Border>
                 </DataTemplate>

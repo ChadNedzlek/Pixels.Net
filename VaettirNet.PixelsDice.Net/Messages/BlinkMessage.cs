@@ -11,8 +11,7 @@ internal struct BlinkMessage
     public int Color;
     public int Faces;
     public byte Fade;
-    [MarshalAs(UnmanagedType.U1)]
-    public bool Loop;
+    [MarshalAs(UnmanagedType.U1)] public bool Loop;
 
     public BlinkMessage()
     {

@@ -10,7 +10,7 @@
                 <ui:ThemesDictionary Theme="Dark" />
                 <ui:ControlsDictionary />
             </ResourceDictionary.MergedDictionaries>
-            <local:DiceCollection x:Key="DiceCollection"></local:DiceCollection>
+            <local:DiceCollection x:Key="DiceCollection" />
         </ResourceDictionary>
     </Application.Resources>
 </Application>
