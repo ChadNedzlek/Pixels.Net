@@ -91,9 +91,9 @@ public sealed class DieSender : IDisposable, IAsyncDisposable
         });
     }
 
-    private async Task SendTestRoll()
+    public void SendTestRoll()
     {
-        await SendRoll(new RollMessage
+        _channel.Writer.TryWrite(new RollMessage
         {
             Die = new()
             {

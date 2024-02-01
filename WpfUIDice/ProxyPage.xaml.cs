@@ -40,4 +40,9 @@ public partial class ProxyPage : Page
         Dice.ProxyUrls.Add(new ProxyUrl{Url = NewUrl.Text});
         NewUrl.Clear();
     }
+
+    private void SendTestMessage(object sender, RoutedEventArgs e)
+    {
+        Dice.Sender.SendTestRoll();
+    }
 }

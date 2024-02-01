@@ -14,13 +14,15 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*" />
             <ColumnDefinition Width="Auto" />
         </Grid.ColumnDefinitions>
-        <Label Grid.Row="0" Grid.ColumnSpan="2" Content="Notify URL" />
+        <Label Grid.Row="0" Content="Notify URL" />
+        <Button Grid.Row="0" Grid.Column="1" HorizontalAlignment="Right" Content="Test" Click="SendTestMessage" />
         <TextBox Grid.Row="1" Grid.Column="0" Name="NewUrl" />
         <Button Content="Add" Grid.Row="1" Grid.Column="1" Click="AddUrl" />
         <ListBox Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" ItemsSource="{Binding RelativeSource={RelativeSource AncestorType=local:ProxyPage}, Path=Dice.ProxyUrls}" Name="UrlList" SelectionMode="Single" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
@@ -32,7 +34,28 @@
                             <ColumnDefinition Width="*" SharedSizeGroup="Url" />
                             <ColumnDefinition Width="Auto" SharedSizeGroup="Remove" />
                         </Grid.ColumnDefinitions>
-                        <ui:SymbolIcon Symbol="CheckmarkCircle20" Margin="0,0,4,0" />
+                        <ui:SymbolIcon Grid.Column="0" Symbol="CheckmarkCircle20" Margin="0,0,4,0">
+                            <ui:SymbolIcon.Style>
+                                <Style TargetType="{x:Type ui:SymbolIcon}">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsError}" Value="True">
+                                            <Setter Property="Visibility" Value="Collapsed" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </ui:SymbolIcon.Style>
+                        </ui:SymbolIcon>
+                        <ui:SymbolIcon Grid.Column="0" Symbol="ErrorCircle20" Margin="0,0,4,0" Foreground="Red">
+                            <ui:SymbolIcon.Style>
+                                <Style TargetType="{x:Type ui:SymbolIcon}">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsError}" Value="False">
+                                            <Setter Property="Visibility" Value="Collapsed" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </ui:SymbolIcon.Style>
+                        </ui:SymbolIcon>
                         <Label Grid.Column="1" Content="{Binding Url}" VerticalAlignment="Center" />
                         <ui:Button Grid.Column="2" Icon="{ui:SymbolIcon Delete20}" />
                     </Grid>
@@ -45,7 +68,9 @@
                 </Style>
             </ListBox.ItemContainerStyle>
         </ListBox>
-        <ui:DataGrid Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2" ItemsSource="{Binding ElementName=UrlList, Path=SelectedValue.Headers, Mode=OneWay}" AutoGenerateColumns="False">
+        <ui:InfoBar Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2" Title="Error" Severity="Error" Message="{Binding ElementName=UrlList, Path=SelectedValue.LastErrorMessage}" IsClosable="False" IsOpen="{Binding ElementName=UrlList, Path=SelectedValue.IsError}" >
+        </ui:InfoBar>
+        <ui:DataGrid Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="2" ItemsSource="{Binding ElementName=UrlList, Path=SelectedValue.Headers, Mode=OneWay}" AutoGenerateColumns="False">
             <ui:DataGrid.Columns>
                 <DataGridTextColumn Header="Name" Binding="{Binding Name}" MaxWidth="200" Width="1*" />
                 <DataGridTextColumn Header="Value" Binding="{Binding Value}" Width="3*"  />
