@@ -11,6 +11,7 @@
                 <ui:ControlsDictionary />
             </ResourceDictionary.MergedDictionaries>
             <local:DiceCollection x:Key="DiceCollection" />
+            <local:AppSettings x:Key="AppSettings" />
         </ResourceDictionary>
     </Application.Resources>
 </Application>

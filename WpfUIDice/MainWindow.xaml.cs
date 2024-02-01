@@ -1,9 +1,13 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using VaettirNet.PixelsDice.Net;
+using Wpf.Ui;
 using Wpf.Ui.Controls;
 
 namespace WpfUIDice;
@@ -25,17 +29,65 @@ public partial class MainWindow : FluentWindow
         typeof(MainWindow),
         new PropertyMetadata(default(bool)));
 
-    private PixelsManager _manager;
-
     private CancellationTokenSource _scanStop;
+    private IContentDialogService _dialogs = new ContentDialogService();
 
     public MainWindow()
     {
         Dice = (DiceCollection)Application.Current.FindResource("DiceCollection")!;
-        Task.Run(async () => _manager = await PixelsManager.CreateAsync());
         InitializeComponent();
+        _dialogs.SetContentPresenter(RootContentDialogPresenter);
         NavigationView.Loaded += (_, _) =>
             NavigationView.Navigate(((NavigationViewItem)NavigationView.MenuItems[0]).TargetPageType);
+
+        _ = InitAsync();
+    }
+
+    private async Task InitAsync()
+    {
+        List<string> savedDice = App.Current.AppSettings.SavedDiceIds;
+        if (savedDice?.Count > 0)
+        {
+            var dialogClosed = new CancellationTokenSource();
+            var scanCompleted = new CancellationTokenSource();
+            
+            async Task WaitDialog()
+            {
+                await Task.Delay(TimeSpan.FromSeconds(10), scanCompleted.Token);
+                if (scanCompleted.IsCancellationRequested)
+                    return;
+                await _dialogs.ShowSimpleDialogAsync(new()
+                    {
+                        Title = "Reconnecting",
+                        CloseButtonText = "Stop",
+                        Content = "Reconnecting saved dice..."
+                    },
+                    scanCompleted.Token
+                );
+                dialogClosed.Cancel();
+            }
+
+            async Task ConnectDice()
+            {
+                await foreach (var die in App.Current.PixelsManager.ReattachAsync(savedDice, TimeSpan.FromMinutes(1), cancellationToken: dialogClosed.Token))
+                {
+                    await die.ConnectAsync();
+                    Dice.Log.Add($"Found die {die.LedCount}");
+                    var dieView = new DieView(die, true);
+                    Dice.Dice.Add(dieView);
+                }
+                scanCompleted.Cancel();
+            }
+
+            try
+            {
+                await Task.WhenAll(WaitDialog(), ConnectDice());
+            }
+            catch (OperationCanceledException) when (dialogClosed.IsCancellationRequested || scanCompleted.IsCancellationRequested)
+            {
+                // This is good
+            }
+        }
     }
 
     public DiceCollection Dice
@@ -59,15 +111,13 @@ public partial class MainWindow : FluentWindow
 
     private async void StartScan(object sender, RoutedEventArgs e)
     {
-        if (_manager == null)
-            return;
         _scanStop = new CancellationTokenSource();
         Dice.Log.Add("Scan started.");
         IsScanning = true;
         CancellationToken stopToken = _scanStop.Token;
         try
         {
-            await foreach (PixelsDie die in _manager.ScanAsync(true, false, cancellationToken: stopToken))
+            await foreach (PixelsDie die in App.Current.PixelsManager.ScanAsync(true, false, cancellationToken: stopToken))
             {
                 if (Dice.Dice.Any(d => d.Die.PixelId == die.PixelId))
                 {

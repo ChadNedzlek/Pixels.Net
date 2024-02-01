@@ -1,3 +1,4 @@
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -21,6 +22,8 @@ public partial class ConnectPage : Page
     {
         Dice = (DiceCollection)Application.Current.FindResource("DiceCollection")!;
         InitializeComponent();
+        Dice.DieRollStateChanged += DieStateChanged;
+        Unloaded += (_, _) => Dice.DieRollStateChanged -= DieStateChanged;
     }
 
     public DiceCollection Dice
@@ -29,20 +32,21 @@ public partial class ConnectPage : Page
         set => SetValue(DiceProperty, value);
     }
 
-    private void SaveDie(object sender, ExecutedRoutedEventArgs e)
+    private async void SaveDie(object sender, ExecutedRoutedEventArgs e)
     {
         if (e.Parameter is not DieView die) return;
 
         Dice.Log.Add($"Saved die {die.Die.PixelId} as {die.Die.GetPersistentIdentifier()}");
 
+        App.Current.AppSettings.SavedDiceIds.Add(die.Die.GetPersistentIdentifier());
+        await App.Current.SaveSettingsAsync();
         die.Save();
     }
 
     private async void ConnectDie(object sender, ExecutedRoutedEventArgs e)
     {
         if (e.Parameter is not DieView die) return;
-
-        die.Die.RollStateChanged += (source, state, value, index) => DieStateChanged(die, source, state, value, index);
+        
         await die.Die.ConnectAsync();
 
         Dice.Log.Add($"Connected die {die.Die.PixelId} s{die.Die.LedCount} (Firmware: {die.Die.BuildTimestamp})");
@@ -50,14 +54,14 @@ public partial class ConnectPage : Page
         die.Connect();
     }
 
-    private void DieStateChanged(DieView die, PixelsDie source, RollState state, int value, int index)
+    private void DieStateChanged(DieView die, RollState state, int value, int index)
     {
         Dispatcher.Invoke(() =>
             {
                 switch (state)
                 {
                     case RollState.OnFace:
-                        Dice.Log.Add($"Die roll: {value} (die: {source.PixelId})");
+                        Dice.Log.Add($"Die roll: {value} (die: {die.Die.PixelId})");
                         die.FinishRolling(value);
                         return;
                     default:
@@ -75,5 +79,6 @@ public partial class ConnectPage : Page
         await die.Die.DisposeAsync();
 
         Dice.Dice.Remove(die);
+        App.Current.AppSettings.SavedDiceIds.Remove(die.Die.GetPersistentIdentifier());
     }
 }

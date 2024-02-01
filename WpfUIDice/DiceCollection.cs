@@ -101,13 +101,24 @@ public class DiceCollection : DependencyObject
         foreach (DieView die in e.OldItems.EmptyCast<DieView>())
         {
             Sender.RemoveDie(die.Die);
+            die.Die.RollStateChanged -= RollStateChanged;
         }
         
         foreach (DieView die in e.NewItems.EmptyCast<DieView>())
         {
             Sender.AddDie(die.Die);
+            die.Die.RollStateChanged += RollStateChanged;
         }
     }
+
+    private void RollStateChanged(PixelsDie source, RollState state, int value, int index)
+    {
+        var view = Dice.FirstOrDefault(d => d.Die == source);
+        if (view != null)
+            DieRollStateChanged?.Invoke(view, state, value, index);
+    }
+    
+    public event Action<DieView, RollState, int, int> DieRollStateChanged;
 
     private static void OnProxyUrlsPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
     {

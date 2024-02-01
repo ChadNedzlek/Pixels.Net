@@ -66,7 +66,7 @@ internal static class Program
             if (saved != null)
             {
                 Console.WriteLine($"Reconnecting to {saved.Count} dice");
-                search = mgr.ReconnectAsync(saved, cancellationToken: exit.Token);
+                search = mgr.ReattachAsync(saved, cancellationToken: exit.Token);
             }
             else
             {

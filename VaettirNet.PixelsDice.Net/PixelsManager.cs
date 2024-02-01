@@ -91,7 +91,7 @@ public sealed class PixelsManager : IDisposable
         _adapter.StopScanning();
     }
 
-    public IAsyncEnumerable<PixelsDie> ReconnectAsync(IEnumerable<string> savedIdentifiers, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
+    public IAsyncEnumerable<PixelsDie> ReattachAsync(IEnumerable<string> savedIdentifiers, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         timeout ??= TimeSpan.FromSeconds(30);
         var items = savedIdentifiers.ToList();

@@ -12,6 +12,7 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
+        <ContentPresenter x:Name="RootContentDialogPresenter" Grid.Row="0" Grid.RowSpan="2" />
         <ui:TitleBar Grid.Row="0" Title="Pixels Die Scanner" Height="24" />
         <ui:NavigationView Grid.Row="1" PaneDisplayMode="LeftFluent" Name="NavigationView">
             <ui:NavigationView.Header>
