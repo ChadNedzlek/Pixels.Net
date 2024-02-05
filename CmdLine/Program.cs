@@ -97,7 +97,7 @@ internal static class Program
                     $"Connected to die {die.PixelId} (color:{die.Colorway}, type:{die.Type}, firmware:{die.BuildTimestamp.ToLocalTime()}");
 
                 await die.SendInstantAnimations(animations);
-                die.PlayInstantAnimation(2, 1);
+                die.PlayInstantAnimation(2, 1, 0);
             }
             
             Console.WriteLine($"Found {found.Count} dice!");

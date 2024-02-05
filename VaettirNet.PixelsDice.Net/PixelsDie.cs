@@ -30,6 +30,9 @@ public sealed class PixelsDie : IDisposable, IAsyncDisposable
 
     public bool IsConnected { get; private set; }
 
+    private ICommonProtocolHandler _commonProtocol;
+    private IAnimationProtocolHandler _animationProtocol;
+
     /// <summary>
     /// Event triggered when a die is handled or rolled.
     /// </summary>
@@ -48,16 +51,7 @@ public sealed class PixelsDie : IDisposable, IAsyncDisposable
     {
         await _ble.ConnectAsync(DataReceived).ConfigureAwait(false);
         _ble.SendMessage(new WhoAmIMessage());
-        IAmADieMessage id = await _idReceived.Task.ConfigureAwait(false);
-        PixelId = id.PixelId;
-        LedCount = id.LedCount;
-        Type = id.Type;
-        Colorway = id.Colorway;
-        BuildTimestamp = DateTimeOffset.FromUnixTimeSeconds(id.BuildTimestamp);
-        RollState = id.RollState;
-        CurrentFace = id.CurrentFace;
-        BatteryLevel = id.BatteryLevel;
-        BatteryState = id.BatteryState;
+        await _idReceived.Task.ConfigureAwait(false);
         IsConnected = true;
     }
     
@@ -151,13 +145,9 @@ public sealed class PixelsDie : IDisposable, IAsyncDisposable
         await finishAck;
     }
 
-    public void PlayInstantAnimation(int index, byte faceIndex)
+    public void PlayInstantAnimation(int index, int loopCount, byte faceIndex)
     {
-        // BUG: "loopCount" is recent, before that, it's a boolean, so we can't set it to anything
-        // without checking the firmware version and having lots of versions of the messages
-        // For now, no looping.
-        _ble.SendMessage(new PlayInstantAnimationMessage
-            { Animation = (byte)index, LoopCount = (byte)0, FaceIndex = faceIndex });
+        _animationProtocol.PlayInstantAnimation(_ble, index, loopCount, faceIndex);
     }
 
     public void StopAllAnimations()
@@ -194,7 +184,7 @@ public sealed class PixelsDie : IDisposable, IAsyncDisposable
         }
     }
 
-    private readonly TaskCompletionSource<IAmADieMessage> _idReceived = new();
+    private readonly TaskCompletionSource _idReceived = new();
     private delegate object SerializeAck(ReadOnlySpan<byte> data);
     private readonly Dictionary<MessageType, (TaskCompletionSource<object> recieved, SerializeAck serialize)> _ackHandlers = [];
     
@@ -207,7 +197,7 @@ public sealed class PixelsDie : IDisposable, IAsyncDisposable
         switch (messageType)
         {
             case MessageType.IAmADie:
-                HandleIAmADie(MemoryMarshal.Read<IAmADieMessage>(msg));
+                HandleIAmADie(msg);
                 break;
             case MessageType.RollState:
                 HandleDieRoll(MemoryMarshal.Read<RollStateMessage>(msg));
@@ -256,12 +246,27 @@ public sealed class PixelsDie : IDisposable, IAsyncDisposable
         };
     }
 
-    private void HandleIAmADie(IAmADieMessage msg)
+    private void HandleIAmADie(ReadOnlySpan<byte> msg)
     {
-        if (!_idReceived.TrySetResult(msg))
+        if (_commonProtocol != null)
         {
-            Logger.Instance.Log(PixelsLogLevel.Info, "Received duplicate IAmADie messages, discarding");
+            return;
         }
+
+        if (msg.Length == 22)
+        {
+            _commonProtocol = new PrereleaseCommonProtocol();
+            _animationProtocol = new PrereleaseAnimationProtocolHandler();
+        }
+
+        if (_commonProtocol == null)
+        {
+            throw new NotSupportedException(
+                "Die firmware is using an unsupported protocol version, please update this library.");
+        }
+
+        _commonProtocol.IAmADie(this, msg);
+        _idReceived.TrySetResult();
     }
 
     public void Dispose()
@@ -291,5 +296,42 @@ public sealed class PixelsDie : IDisposable, IAsyncDisposable
         die.BatteryLevel = battery & 0x7F;
         die.BatteryState = battery & 0x80;
         return die;
+    }
+
+    private interface ICommonProtocolHandler
+    {
+        void IAmADie(PixelsDie pixelsDie, ReadOnlySpan<byte> msg);
+    }
+
+    private class PrereleaseCommonProtocol : ICommonProtocolHandler
+    {
+        public void IAmADie(PixelsDie pixelsDie, ReadOnlySpan<byte> msg)
+        {
+            var id = MemoryMarshal.Read<PrereleaseIAmADieMessage>(msg);
+            
+            pixelsDie.PixelId = id.PixelId;
+            pixelsDie.LedCount = id.LedCount;
+            pixelsDie.Type = id.Type;
+            pixelsDie.Colorway = id.Colorway;
+            pixelsDie.BuildTimestamp = DateTimeOffset.FromUnixTimeSeconds(id.BuildTimestamp);
+            pixelsDie.RollState = id.RollState;
+            pixelsDie.CurrentFace = id.CurrentFace;
+            pixelsDie.BatteryLevel = id.BatteryLevel;
+            pixelsDie.BatteryState = id.BatteryState;
+        }
+    }
+
+    private interface IAnimationProtocolHandler
+    {
+        void PlayInstantAnimation(BlePeripheral ble, int index, int loopCount, byte faceIndex);
+    }
+
+    private class PrereleaseAnimationProtocolHandler : IAnimationProtocolHandler
+    {
+        public void PlayInstantAnimation(BlePeripheral ble, int index, int loopCount, byte faceIndex)
+        {
+            ble.SendMessage(new PlayInstantAnimationMessage
+                { Animation = (byte)index, LoopCount = (byte)0, FaceIndex = faceIndex });
+        }
     }
 }

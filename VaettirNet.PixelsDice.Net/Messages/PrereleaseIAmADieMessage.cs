@@ -3,7 +3,7 @@
 namespace VaettirNet.PixelsDice.Net.Messages;
 
 [StructLayout(LayoutKind.Sequential, Pack = 1)]
-internal struct IAmADieMessage
+internal struct PrereleaseIAmADieMessage
 {
     public byte Id;
     public byte LedCount;
