@@ -79,7 +79,7 @@ internal sealed class BlePeripheral : IDisposable, IAsyncDisposable
     public void SendMessage<T>(T data) where T : struct
     {
         var buffer = MemoryMarshal.AsBytes(MemoryMarshal.CreateSpan(ref data, 1));
-        NativeMethods.WriteRequest(
+        NativeMethods.WriteCommand(
             _handle,
             PixelsId.PixelsServiceUuid,
             PixelsId.WriteCharacteristicUuid,

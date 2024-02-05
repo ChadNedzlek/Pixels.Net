@@ -14,10 +14,10 @@ namespace VaettirNet.PixelsDice.Net;
 
 public sealed class DieSender : IDisposable, IAsyncDisposable
 {
-    private JsonSerializerOptions _serializer = BuildSerializerOptions();
+    private static readonly JsonSerializerOptions SerializerOptions = BuildSerializerOptions();
     
     private readonly List<PixelsDie> _monitoredDice = [];
-    private List<(string url, IImmutableDictionary<string, string> headers)> _urls = [];
+    private readonly List<(string url, IImmutableDictionary<string, string> headers)> _urls = [];
     private readonly HttpClient _client = new();
     
     private readonly Dictionary<string, string> _lastError = [];
@@ -117,7 +117,7 @@ public sealed class DieSender : IDisposable, IAsyncDisposable
 
     private async Task SendRoll(RollMessage msg)
     {
-        string serialized = JsonSerializer.Serialize(msg, _serializer);
+        string serialized = JsonSerializer.Serialize(msg, SerializerOptions);
         // Copy these in case they change
         var copy = _urls.ToList();
         string[] responses = await Task.WhenAll(copy.Select(u => SendSingle(u.url, u.headers, serialized)));

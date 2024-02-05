@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
+using VaettirNet.PixelsDice.Net.Animations;
 using VaettirNet.PixelsDice.Net.Ble;
 using VaettirNet.PixelsDice.Net.Messages;
 
@@ -95,25 +97,129 @@ public sealed class PixelsDie : IDisposable, IAsyncDisposable
         _ble.SendMessage(msg);
     }
 
-    private readonly TaskCompletionSource<IAmADieMessage> _idReceived = new();
+    public async Task SendInstantAnimations(AnimationCollection animations)
+    {
+        SerializedAnimationData serialized = animations.Serialize();
 
+        uint hash = AnimationUtils.Hash(serialized.Buffer);
+        Logger.Instance.Log(PixelsLogLevel.Info, $"Sending hash {hash}");
+        var animSetMessage = new TransferInstantAnimSetMessage
+        {
+            PaletteSize = (ushort)(serialized.Data.Palette.Count * 3),
+            RgbKeyFrameCount = (ushort)serialized.Data.RgbKeyFrames.Count,
+            RgbTrackCount = (ushort)serialized.Data.RgbTracks.Count,
+            KeyFrameCount = (ushort)serialized.Data.KeyFrames.Count,
+            TrackCount = (ushort)serialized.Data.Tracks.Count,
+            AnimationCount = (ushort)animations.Animations.Count,
+            AnimationSize = serialized.AnimationSize,
+            Hash = hash,
+        };
+        TransferInstantAnimSetAckMessage ack = await SendAndWaitForAck<TransferInstantAnimSetMessage, TransferInstantAnimSetAckMessage>(
+            animSetMessage,
+            MessageType.TransferInstantAnimSetAck);
+
+        switch (ack.Type)
+        {
+            case TransferInstantAnimSetAckType.NoMemory:
+                throw new DeviceOutOfMemoryException("Device reported no memory for animation set");
+            case TransferInstantAnimSetAckType.UpToDate:
+                return;
+        }
+
+        await SendAndWaitForAck<BulkSetupMessage, GenericMessage>(
+            new BulkSetupMessage { Size = (ushort)serialized.Buffer.Length },
+            MessageType.BulkSetupAck);
+        
+        var finishAck = WaitForMessage<GenericMessage>(MessageType.TransferInstantAnimSetFinished);
+
+        Memory<byte> remBuffer = serialized.Buffer.AsMemory();
+        int offset = 0;
+        while (!remBuffer.IsEmpty)
+        {
+            byte len = (byte)Math.Min(100, remBuffer.Length);
+            var toSend = remBuffer[..len];
+            var msg = new BulkDataMessage{Offset = (ushort)offset, Size = len};
+            unsafe
+            {
+                toSend.Span.CopyTo(new Span<byte>(msg.Data, 100));
+            }
+            _ = await SendAndWaitForAck<BulkDataMessage, BulkDataAckMessage>(msg, MessageType.BulkDataAck);
+            offset += len;
+            remBuffer = remBuffer[len..];
+        }
+
+        await finishAck;
+    }
+
+    public void PlayInstantAnimation(int index, int loopCount, byte faceIndex)
+    {
+        _ble.SendMessage(new PlayInstantAnimationMessage
+            { Animation = (byte)index, LoopCount = (byte)2, FaceIndex = faceIndex });
+    }
+
+    public void StopAllAnimations()
+    {
+        _ble.SendMessage(new GenericMessage(MessageType.StopAllAnims));
+    }
+
+    private Task<TAck> SendAndWaitForAck<TMessage, TAck>(TMessage message, MessageType ackType)
+        where TMessage : struct
+        where TAck : struct 
+    {
+        var src = new TaskCompletionSource<object>();
+        _ackHandlers[ackType] = (src, msg => MemoryMarshal.Read<TAck>(msg));
+        _ble.SendMessage(message);
+        return Wait();
+        async Task<TAck> Wait()
+        {
+            var ret = (TAck)await src.Task;
+            _ackHandlers.Remove(ackType);
+            return ret;
+        }
+    }
+    
+    private Task<TAck> WaitForMessage<TAck>(MessageType ackType) where TAck : struct
+    {
+        var src = new TaskCompletionSource<object>();
+        _ackHandlers[ackType] = (src, msg => MemoryMarshal.Read<TAck>(msg));
+        return Wait();
+        async Task<TAck> Wait()
+        {
+            var ret = (TAck)await src.Task;
+            _ackHandlers.Remove(ackType);
+            return ret;
+        }
+    }
+
+    private readonly TaskCompletionSource<IAmADieMessage> _idReceived = new();
+    private delegate object SerializeAck(ReadOnlySpan<byte> data);
+    private readonly Dictionary<MessageType, (TaskCompletionSource<object> recieved, SerializeAck serialize)> _ackHandlers = [];
+    
     private void DataReceived(ReadOnlySpan<byte> msg)
     {
         if (msg.Length == 0)
             return;
 
-        switch (msg[0])
+        var messageType = (MessageType)msg[0];
+        switch (messageType)
         {
-            case 2:
+            case MessageType.IAmADie:
                 HandleIAmADie(MemoryMarshal.Read<IAmADieMessage>(msg));
                 break;
-            case 3:
+            case MessageType.RollState:
                 HandleDieRoll(MemoryMarshal.Read<RollStateMessage>(msg));
                 break;
-            case 34:
+            case MessageType.BatteryLevel:
                 HandleBatteryMessage(MemoryMarshal.Read<BatteryLevelMessage>(msg));
                 break;
             default:
+                if (_ackHandlers.TryGetValue(messageType, out var handler))
+                {
+                    object value = handler.serialize(msg);
+                    handler.recieved.TrySetResult(value);
+                    break;
+                }
+
                 // Messages we don't care about
                 break;
         }

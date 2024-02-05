@@ -5,7 +5,7 @@ namespace VaettirNet.PixelsDice.Net.Messages;
 [StructLayout(LayoutKind.Sequential, Pack = 1)]
 internal struct BlinkMessage
 {
-    public byte Id = 29;
+    public MessageType Id = MessageType.Blink;
     public byte Count;
     public short DurationMs;
     public int Color;

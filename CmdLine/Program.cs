@@ -1,10 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Drawing;
 using System.Threading;
 using System.Threading.Tasks;
 using Mono.Options;
 using VaettirNet.PixelsDice.Net;
+using VaettirNet.PixelsDice.Net.Animations;
+using VaettirNet.PixelsDice.Net.Animations.Definitions;
 
 namespace CmdLine;
 
@@ -62,6 +65,9 @@ internal static class Program
 
         try
         {
+
+            var animations = BuildAnimationCollection();
+            
             IAsyncEnumerable<PixelsDie> search;
             if (saved != null)
             {
@@ -74,7 +80,7 @@ internal static class Program
                 search = mgr.ScanAsync(true, true, cancellationToken: exit.Token);
             }
 
-            await foreach (PixelsDie die in search)
+            await foreach (PixelsDie die in search.WithCancellation(exit.Token))
             {
                 found.Add(die);
                 die.RollStateChanged += DieRolled;
@@ -89,8 +95,11 @@ internal static class Program
 
                 Console.WriteLine(
                     $"Connected to die {die.PixelId} (color:{die.Colorway}, type:{die.Type}, firmware:{die.BuildTimestamp.ToLocalTime()}");
-                die.Blink(5, TimeSpan.FromSeconds(1), Color.Aqua, 0xFF, 0, false);
+
+                await die.SendInstantAnimations(animations);
+                die.PlayInstantAnimation(2, 1, 1);
             }
+            
             Console.WriteLine($"Found {found.Count} dice!");
             await Task.Delay(Timeout.Infinite, exit.Token);
         }
@@ -109,6 +118,46 @@ internal static class Program
                 await d.DisposeAsync();
             }
         }
+    }
+
+    private static AnimationCollection BuildAnimationCollection()
+    {
+        return new AnimationCollection(ImmutableList.Create<Animation>(
+            BuildSimpleAnimation(Color.Purple),
+            BuildSimpleAnimation(Color.Blue),
+            BuildNoiseAnimation()
+        ));
+    }
+
+    private static SimpleAnimation BuildSimpleAnimation(Color color)
+    {
+        return new SimpleAnimation(TimeSpan.FromMilliseconds(50), 1, color, 1, 0);
+    }
+
+    private static NoiseAnimation BuildNoiseAnimation()
+    {
+        return new NoiseAnimation(
+            duration: TimeSpan.FromSeconds(5),
+            overallGradient: new RgbTrack(
+                ImmutableList.Create(
+                    new RgbKeyFrame(Color.Red, TimeSpan.FromSeconds(1)),
+                    new RgbKeyFrame(Color.Blue, TimeSpan.FromSeconds(1)),
+                    new RgbKeyFrame(Color.Yellow, TimeSpan.FromSeconds(1))
+                ),
+                0xFFFFFFFF
+            ),
+            individualGradient: new RgbTrack(
+                ImmutableList.Create(
+                    new RgbKeyFrame(Color.Purple, TimeSpan.FromSeconds(1)),
+                    new RgbKeyFrame(Color.White, TimeSpan.FromSeconds(1)),
+                    new RgbKeyFrame(Color.Green, TimeSpan.FromSeconds(1))
+                ),
+                0xFFFFFFFF),
+            blinkSpeed: TimeSpan.FromMilliseconds(100),
+            blinkDuration: TimeSpan.FromMilliseconds(25),
+            fade: 0f,
+            colorType: NoiseColorOverrideType.None,
+            overallColorVariance: 0);
     }
 
     private static void DieRolled(PixelsDie die, RollState state, int value, int face)

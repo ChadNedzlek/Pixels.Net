@@ -77,6 +77,13 @@ internal static partial class NativeMethods
         [MarshalAs(UnmanagedType.Struct)] BleUuid characteristic,
         ref byte data,
         nuint length);
+    
+    [DllImport(SimpleBleLibraryName, EntryPoint = "simpleble_peripheral_write_command")]
+    internal static extern CallResult WriteCommand(SafePeripheralHandle peripheral,
+        [MarshalAs(UnmanagedType.Struct)] BleUuid service,
+        [MarshalAs(UnmanagedType.Struct)] BleUuid characteristic,
+        ref byte data,
+        nuint length);
 
     [DllImport(SimpleBleLibraryName, EntryPoint = "simpleble_peripheral_unsubscribe")]
     internal static extern CallResult Unsubscribe(SafePeripheralHandle peripheral,
