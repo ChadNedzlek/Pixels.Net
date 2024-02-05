@@ -97,7 +97,7 @@ internal static class Program
                     $"Connected to die {die.PixelId} (color:{die.Colorway}, type:{die.Type}, firmware:{die.BuildTimestamp.ToLocalTime()}");
 
                 await die.SendInstantAnimations(animations);
-                die.PlayInstantAnimation(2, 1, 1);
+                die.PlayInstantAnimation(2, 1);
             }
             
             Console.WriteLine($"Found {found.Count} dice!");
@@ -131,7 +131,7 @@ internal static class Program
 
     private static SimpleAnimation BuildSimpleAnimation(Color color)
     {
-        return new SimpleAnimation(TimeSpan.FromMilliseconds(50), 1, color, 1, 0);
+        return new SimpleAnimation(TimeSpan.FromSeconds(2), 1, color, 1, 0);
     }
 
     private static NoiseAnimation BuildNoiseAnimation()

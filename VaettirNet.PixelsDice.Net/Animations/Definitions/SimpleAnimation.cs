@@ -1,5 +1,4 @@
 using System;
-using System.Diagnostics.Metrics;
 using System.Drawing;
 using VaettirNet.PixelsDice.Net.Animations.Protocol.AnimationData;
 

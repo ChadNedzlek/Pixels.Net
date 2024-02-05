@@ -1,4 +1,3 @@
-using System;
 using VaettirNet.PixelsDice.Net.Animations.Protocol.AnimationData;
 
 namespace VaettirNet.PixelsDice.Net.Animations;
@@ -21,9 +20,9 @@ public abstract class Animation
         return ToProtocol(
             new SharedAnimationData
             {
-                Duration = (ushort)DurationMs,
                 Type = Type,
-                Flags = Flags
+                Flags = Flags,
+                Duration = (ushort)DurationMs,
             },
             data);
     }

@@ -151,10 +151,13 @@ public sealed class PixelsDie : IDisposable, IAsyncDisposable
         await finishAck;
     }
 
-    public void PlayInstantAnimation(int index, int loopCount, byte faceIndex)
+    public void PlayInstantAnimation(int index, byte faceIndex)
     {
+        // BUG: "loopCount" is recent, before that, it's a boolean, so we can't set it to anything
+        // without checking the firmware version and having lots of versions of the messages
+        // For now, no looping.
         _ble.SendMessage(new PlayInstantAnimationMessage
-            { Animation = (byte)index, LoopCount = (byte)2, FaceIndex = faceIndex });
+            { Animation = (byte)index, LoopCount = (byte)0, FaceIndex = faceIndex });
     }
 
     public void StopAllAnimations()

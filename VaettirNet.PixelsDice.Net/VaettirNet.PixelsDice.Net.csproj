@@ -3,7 +3,6 @@
     <PropertyGroup>
         <RootNamespace>VaettirNet.PixelsDice.Net</RootNamespace>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-
         <Description>Cross-platform library for interacting with Pixels dice from .NET, using SimpleBle</Description>
         <Copyright>Chad Nedzlek 2024</Copyright>
         <Authors>Chad Nedzlek</Authors>
