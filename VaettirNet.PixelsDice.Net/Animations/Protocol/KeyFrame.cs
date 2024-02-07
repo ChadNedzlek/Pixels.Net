@@ -8,10 +8,10 @@ internal struct KeyFrame
     public ushort Data;
 
     public byte Intensity => (byte)(Data & 0x7F);
-    public int DurationMs => (Data >> 7) * 1000 / 50;
+    public int TimeMs => (Data >> 7) * 1000 / 50;
 
-    public static KeyFrame Create(byte intensity, uint durationMs)
+    public static KeyFrame Create(byte intensity, uint timeMs)
     {
-        return new KeyFrame { Data = (ushort)((uint)(intensity & 0x7F) | ((durationMs * 50 / 1000) << 7)) };
+        return new KeyFrame { Data = (ushort)((uint)(intensity & 0x7F) | ((timeMs * 50 / 1000) << 7)) };
     }
 }

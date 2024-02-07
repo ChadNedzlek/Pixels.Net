@@ -6,21 +6,21 @@ namespace VaettirNet.PixelsDice.Net.Animations;
 public readonly struct RgbKeyFrame
 {
     public Color Color { get; }
-    public uint Duration { get; }
+    public uint TimeOffsetMs { get; }
 
-    public RgbKeyFrame(Color color, uint duration)
+    public RgbKeyFrame(Color color, uint timeOffsetMs)
     {
         Color = color;
-        Duration = duration;
+        TimeOffsetMs = timeOffsetMs;
     }
     
-    public RgbKeyFrame(Color color, TimeSpan duration) : this(color, (uint)duration.TotalMilliseconds)
+    public RgbKeyFrame(Color color, TimeSpan timeOffset) : this(color, (uint)timeOffset.TotalMilliseconds)
     {
     }
 
     internal Protocol.RgbKeyFrame ToProtocol(GlobalAnimationData data)
     {
         byte palette = data.GetPalette(Color);
-        return Protocol.RgbKeyFrame.Create(palette, Duration);
+        return Protocol.RgbKeyFrame.Create(palette, TimeOffsetMs);
     }
 }

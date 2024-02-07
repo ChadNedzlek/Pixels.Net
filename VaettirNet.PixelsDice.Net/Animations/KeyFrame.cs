@@ -5,20 +5,20 @@ namespace VaettirNet.PixelsDice.Net.Animations;
 public readonly struct KeyFrame
 {
     public double Intensity { get; }
-    public uint Duration { get; }
+    public uint TimeOffsetMs { get; }
 
-    public KeyFrame(double intensity, uint duration)
+    public KeyFrame(double intensity, uint timeOffsetMs)
     {
         Intensity = intensity;
-        Duration = duration;
+        TimeOffsetMs = timeOffsetMs;
     }
     
-    public KeyFrame(double intensity, TimeSpan duration) : this(intensity, (uint)duration.TotalMilliseconds)
+    public KeyFrame(double intensity, TimeSpan timeOffset) : this(intensity, (uint)timeOffset.TotalMilliseconds)
     {
     }
 
     internal Protocol.KeyFrame ToProtocol(GlobalAnimationData data)
     {
-        return Protocol.KeyFrame.Create((byte)(Intensity * 127), Duration);
+        return Protocol.KeyFrame.Create((byte)(Intensity * 127), TimeOffsetMs);
     }
 }

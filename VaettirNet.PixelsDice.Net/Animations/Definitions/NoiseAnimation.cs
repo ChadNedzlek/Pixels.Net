@@ -32,7 +32,7 @@ public class NoiseAnimation : Animation
     {
         ArgumentValidation.ThrowIfNotUnit(fade);
         ArgumentValidation.ThrowIfNotUnit(overallColorVariance);
-        ArgumentValidation.ThrowIfOutOfRange(blinksPerSecond, 0, 65);
+        ArgumentValidation.ThrowIfOutOfRange(blinksPerSecond, 0, ushort.MaxValue / 1000.0);
         
         ArgumentOutOfRangeException.ThrowIfNegative(blinksPerSecondsVariance);
 
@@ -90,6 +90,55 @@ public class NoiseAnimation : Animation
             flags)
     {
     }
+    
+    public NoiseAnimation(
+        TimeSpan duration,
+        RgbTrack overallGradient,
+        RgbTrack individualGradient,
+        double blinksPerSecond,
+        double blinksPerSecondVariance,
+        TimeSpan blinkDuration,
+        double fade,
+        NoiseColorOverrideType colorType,
+        double overallColorVariance,
+        AnimationFlags flags = AnimationFlags.None)
+        : this(
+            (int)duration.TotalMilliseconds,
+            overallGradient,
+            individualGradient,
+            blinksPerSecond,
+            blinksPerSecondVariance,
+            (int)blinkDuration.TotalMilliseconds,
+            fade,
+            colorType,
+            overallColorVariance,
+            flags)
+    {
+    }
+    
+    public NoiseAnimation(
+        TimeSpan duration,
+        RgbTrack overallGradient,
+        RgbTrack individualGradient,
+        double blinksPerSecond,
+        TimeSpan blinkDuration,
+        double fade,
+        NoiseColorOverrideType colorType,
+        double overallColorVariance,
+        AnimationFlags flags = AnimationFlags.None)
+        : this(
+            duration,
+            overallGradient,
+            individualGradient,
+            blinksPerSecond,
+            0,
+            blinkDuration,
+            fade,
+            colorType,
+            overallColorVariance,
+            flags)
+    {
+    }
 
     public NoiseAnimation(
         TimeSpan duration,
@@ -104,6 +153,8 @@ public class NoiseAnimation : Animation
         : this(duration, overallGradient, individualGradient, blinkSpeed, TimeSpan.Zero, blinkDuration, fade, colorType, overallColorVariance, flags)
     {
     }
+
+    public const double MaxBlinksPerSecond = ushort.MaxValue / 1000.0;
 
     private protected override CombinedAnimationData ToProtocol(SharedAnimationData shared, GlobalAnimationData data)
     {

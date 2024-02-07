@@ -122,11 +122,12 @@ internal static class Program
 
     private static AnimationCollection BuildAnimationCollection()
     {
-        return new AnimationCollection(ImmutableList.Create<Animation>(
+        return new AnimationCollection([
             BuildSimpleAnimation(Color.Purple),
             BuildSimpleAnimation(Color.Blue),
-            BuildNoiseAnimation()
-        ));
+            BuildNoiseAnimation(),
+            BuildFadeAnimation(),
+        ]);
     }
 
     private static SimpleAnimation BuildSimpleAnimation(Color color)
@@ -153,11 +154,23 @@ internal static class Program
                     new RgbKeyFrame(Color.Green, TimeSpan.FromSeconds(1))
                 ),
                 0xFFFFFFFF),
-            blinkSpeed: TimeSpan.FromMilliseconds(100),
-            blinkDuration: TimeSpan.FromMilliseconds(25),
+            blinksPerSecond: NoiseAnimation.MaxBlinksPerSecond,
+            blinkDuration: TimeSpan.FromMilliseconds(10),
             fade: 0f,
             colorType: NoiseColorOverrideType.None,
-            overallColorVariance: 0);
+            overallColorVariance: 0.8);
+    }
+
+    private static GradientAnimation BuildFadeAnimation()
+    {
+        return new GradientAnimation(TimeSpan.FromSeconds(5),
+            FaceMask.All,
+            new RgbTrack([
+                new RgbKeyFrame(Color.Red, TimeSpan.FromSeconds(1)),
+                new RgbKeyFrame(Color.Blue, TimeSpan.FromSeconds(2)),
+                new RgbKeyFrame(Color.Blue, TimeSpan.FromSeconds(3)),
+                new RgbKeyFrame(Color.Green, TimeSpan.FromSeconds(4)),
+            ], FaceMask.All));
     }
 
     private static void DieRolled(PixelsDie die, RollState state, int value, int face)

@@ -141,6 +141,11 @@ public sealed class PixelsManager : IDisposable
             {
                 BleService service = new BleService();
                 NativeMethods.GetService(peri, i, ref service).CheckSuccess();
+                if (service.DataLength != 0)
+                {
+                    Logger.Instance.Log(PixelsLogLevel.Verbose, $"Found service data length: {service.DataLength}");
+                }
+
                 if (service.Uuid.Value == PixelsId.InfoServiceId)
                 {
                     foundInformationService = true;
