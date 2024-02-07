@@ -35,10 +35,10 @@ public class NormalsAnimation : Animation
     {
         ArgumentValidation.ThrowIfNotUnit(fade);
         ArgumentValidation.ThrowIfNotUnit(mainGradientColorVariance);
-        ArgumentValidation.ThrowIfOutOfRange(axisScale, -32, 32);
-        ArgumentValidation.ThrowIfOutOfRange(axisOffset, -32, 32);
-        ArgumentValidation.ThrowIfOutOfRange(axisScrollSpeed, -32, 32);
-        ArgumentValidation.ThrowIfOutOfRange(angleScrollSpeed, -32, 32);
+        ArgumentValidation.ThrowIfOutOfRange(axisScale, short.MinValue / 1000.0, short.MaxValue / 1000.0);
+        ArgumentValidation.ThrowIfOutOfRange(axisOffset, short.MinValue / 1000.0, short.MaxValue / 1000.02);
+        ArgumentValidation.ThrowIfOutOfRange(axisScrollSpeed, short.MinValue / 1000.0, short.MaxValue / 1000.0);
+        ArgumentValidation.ThrowIfOutOfRange(angleScrollSpeed, short.MinValue / 1000.0, short.MaxValue / 1000.0);
         
         AngleTrack = angleTrack;
         AxisTrack = axisTrack;
