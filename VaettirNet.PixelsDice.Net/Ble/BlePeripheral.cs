@@ -15,42 +15,43 @@ internal sealed class BlePeripheral : IDisposable, IAsyncDisposable
     private readonly SafePeripheralHandle _handle;
     private readonly Dispatcher _dispatcher;
 
-    private BlePeripheral(SafePeripheralHandle handle, string id, string address, Dispatcher dispatcher)
-    {
-        Id = id;
-        Address = address;
-        _handle = handle;
-        _dispatcher = dispatcher;
-    }
-
-    public void Dispose()
-    {
-        DisposeAsync().GetAwaiter().GetResult();
-    }
-
-    public async ValueTask DisposeAsync()
-    {
-        if (Interlocked.Exchange(ref _notifyCallback, null) != null)
-        {
-            await DisconnectAsync();
-        }
-        _handle.Dispose();
-    }
-
     private NotifyCallback _notifyCallback;
-    private GCHandle _callbackHandle;
     private OnNotifyCallback _receiveCallback;
 
-    public bool IsConnected => _notifyCallback != null;
+    private readonly object _reconnectLock = new();
+    private ConnectionCallback _disconnectedCallback;
+    private ConnectionCallback _connectedCallback;
+    private Task _reconnectTask;
+    private CancellationTokenSource _reconnectCancellation;
+
+    public ConnectionState ConnectionState;
+    private AsyncAutoResetEvent _disconnectedEvent;
+
+    public bool IsConnected => ConnectionState == ConnectionState.Connected;
+
+    public event Action<BlePeripheral, ConnectionState> ConnectionStateChanged;
 
     public Task ConnectAsync(OnNotifyCallback receiveCallback)
     {
         if (_notifyCallback != null)
             throw new InvalidOperationException();
-        
+
+        if (_disconnectedCallback == null)
+        {
+            lock (_reconnectLock)
+            {
+                if (_disconnectedCallback == null)
+                {
+                    _disconnectedCallback = OnDisconnected;
+                    _connectedCallback = OnConnected;
+                    NativeMethods.OnDisconnected(_handle, _disconnectedCallback, IntPtr.Zero).CheckSuccess();
+                    NativeMethods.OnConnected(_handle, _connectedCallback, IntPtr.Zero).CheckSuccess();
+                }
+            }
+        }
+
         _notifyCallback = OnNotify;
         _receiveCallback = receiveCallback;
-        _callbackHandle = GCHandle.Alloc(_notifyCallback);
 
         return _dispatcher.Execute(Dispatched);
 
@@ -63,6 +64,76 @@ internal sealed class BlePeripheral : IDisposable, IAsyncDisposable
                     _notifyCallback,
                     IntPtr.Zero)
                 .CheckSuccess();
+            ConnectionState = ConnectionState.Connected;
+        }
+    }
+
+    private void SetConnectionState(ConnectionState connectionState)
+    {
+        ConnectionState = connectionState;
+        ConnectionStateChanged?.Invoke(this, connectionState);
+    }
+
+    private void OnConnected(IntPtr peripheral, IntPtr userdata)
+    {
+        SetConnectionState(ConnectionState.Connected);
+    }
+
+    private void OnDisconnected(IntPtr peripheral, IntPtr userdata)
+    {
+        Logger.Instance.Log(PixelsLogLevel.Info, "Connection to device lost... reconnecting...");
+        SetConnectionState(ConnectionState.Reconnecting);
+        lock (_reconnectLock)
+        {
+            if (_reconnectTask == null)
+            {
+                _reconnectCancellation = new CancellationTokenSource();
+                _disconnectedEvent = new AsyncAutoResetEvent(false);
+                _reconnectTask = Task.Factory.StartNew(() => ReconnectCallback(_reconnectCancellation.Token),
+                    _reconnectCancellation.Token);
+            }
+            else
+            {
+                _disconnectedEvent.Set();
+            }
+        }
+    }
+
+    private async Task ReconnectCallback(CancellationToken cancellationToken)
+    {
+        while (!cancellationToken.IsCancellationRequested)
+        {
+            var result = NativeMethods.IsConnectable(_handle, out var connectable);
+
+            if (result == CallResult.Failure || connectable == false)
+            {
+                // Die is not connectable, just wait for a bit
+                await Task.Delay(TimeSpan.FromSeconds(5), cancellationToken);
+                continue;
+            }
+
+            result = await _dispatcher.Execute(() => NativeMethods.ConnectPeripheral(_handle));
+            switch (result)
+            {
+                case CallResult.Success:
+                    // We are reconnected, wait until we get disconnected again
+                    result = NativeMethods.IsConnected(_handle, out var connected);
+                    if (result == CallResult.Failure || connected == false)
+                    {
+                        // We didn't really connect, try again
+                        await Task.Delay(TimeSpan.FromSeconds(5), cancellationToken);
+                        continue;
+                    }
+                    
+                    Logger.Instance.Log(PixelsLogLevel.Info, "Device reconnected");
+
+                    await _disconnectedEvent.WaitAsync(cancellationToken);
+                    break;
+                case CallResult.Failure:
+                    // That didn't work, just chill for a bit
+                    await Task.Delay(TimeSpan.FromSeconds(5), cancellationToken);
+                    break;
+            }
         }
     }
 
@@ -78,27 +149,51 @@ internal sealed class BlePeripheral : IDisposable, IAsyncDisposable
 
     public void SendMessage<T>(T data) where T : struct
     {
-        var buffer = MemoryMarshal.AsBytes(MemoryMarshal.CreateSpan(ref data, 1));
+        Span<byte> buffer = MemoryMarshal.AsBytes(MemoryMarshal.CreateSpan(ref data, 1));
         NativeMethods.WriteCommand(
-            _handle,
-            PixelsId.PixelsServiceUuid,
-            PixelsId.WriteCharacteristicUuid,
-            ref buffer[0],
-            (UIntPtr)buffer.Length
-        ).CheckSuccess();
+                _handle,
+                PixelsId.PixelsServiceUuid,
+                PixelsId.WriteCharacteristicUuid,
+                ref buffer[0],
+                (UIntPtr)buffer.Length
+            )
+            .CheckSuccess();
+    }
+
+    private async Task StopReconnectionAsync()
+    {
+        if (_disconnectedCallback == null)
+            return;
+
+        Task runningTask;
+
+        lock (_reconnectLock)
+        {
+            if (_disconnectedCallback == null)
+                return;
+
+            runningTask = Interlocked.Exchange(ref _reconnectTask, null);
+            _reconnectCancellation.Cancel();
+        }
+
+        if (runningTask != null)
+        {
+            await _reconnectTask.IgnoreCancellation(_reconnectCancellation.Token);
+        }
     }
 
     public async Task DisconnectAsync()
     {
+        await StopReconnectionAsync();
         await _dispatcher.Execute(() => { NativeMethods.DisconnectPeripheral(_handle).CheckSuccess(); }).ConfigureAwait(false);
         _notifyCallback = null;
-        _callbackHandle.Free();
+        ConnectionState = ConnectionState.Disconnected;
     }
 
     public static BlePeripheral Create(SafePeripheralHandle handle, Dispatcher dispatcher)
     {
-        using var id = NativeMethods.GetPeripheralIdentifier(handle);
-        using var addy = NativeMethods.GetPeripheralAddress(handle);
+        using StringHandle id = NativeMethods.GetPeripheralIdentifier(handle);
+        using StringHandle addy = NativeMethods.GetPeripheralAddress(handle);
         return new BlePeripheral(handle, id.Value, addy.Value, dispatcher);
     }
 
@@ -109,15 +204,15 @@ internal sealed class BlePeripheral : IDisposable, IAsyncDisposable
 
     public static string GetPersistentId(SafePeripheralHandle bleHandle)
     {
-        using var id = NativeMethods.GetPeripheralIdentifier(bleHandle);
-        using var addr = NativeMethods.GetPeripheralAddress(bleHandle);
+        using StringHandle id = NativeMethods.GetPeripheralIdentifier(bleHandle);
+        using StringHandle addr = NativeMethods.GetPeripheralAddress(bleHandle);
         return GetPersistentId(id.Value, addr.Value);
     }
 
     private static string GetPersistentId(string id, string address)
     {
-        using MemoryStream stream = new MemoryStream();
-        using (BinaryWriter writer = new BinaryWriter(stream, Encoding.ASCII, true))
+        using var stream = new MemoryStream();
+        using (var writer = new BinaryWriter(stream, Encoding.ASCII, true))
         {
             writer.Write(id);
             writer.Write(address);
@@ -128,11 +223,11 @@ internal sealed class BlePeripheral : IDisposable, IAsyncDisposable
 
     public byte[][] GetManufacturerData()
     {
-        var cnt = NativeMethods.GetManufacturerDataCount(_handle);
+        nuint cnt = NativeMethods.GetManufacturerDataCount(_handle);
         if (cnt == 0)
             return Array.Empty<byte[]>();
         var ret = new byte[cnt][];
-        BleManufacturerData data = new BleManufacturerData();
+        var data = new BleManufacturerData();
         for (nuint i = 0; i < cnt; i++)
         {
             NativeMethods.GetManufacturerData(_handle, i, ref data);
@@ -141,5 +236,30 @@ internal sealed class BlePeripheral : IDisposable, IAsyncDisposable
         }
 
         return ret;
+    }
+
+    private BlePeripheral(SafePeripheralHandle handle, string id, string address, Dispatcher dispatcher)
+    {
+        Id = id;
+        Address = address;
+        _handle = handle;
+        _dispatcher = dispatcher;
+    }
+
+    public void Dispose()
+    {
+        DisposeAsync().AsTask().GetAwaiter().GetResult();
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        await StopReconnectionAsync();
+        
+        if (Interlocked.Exchange(ref _notifyCallback, null) != null)
+        {
+            await DisconnectAsync();
+        }
+
+        _handle.Dispose();
     }
 }

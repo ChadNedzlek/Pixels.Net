@@ -28,7 +28,9 @@ public sealed class PixelsDie : IDisposable, IAsyncDisposable
     public int BatteryLevel { get; private set; }
     public int BatteryState { get; private set; }
 
-    public bool IsConnected { get; private set; }
+    public bool IsConnected => _ble.IsConnected;
+    public ConnectionState ConnectionState => _ble.ConnectionState;
+    public event Action<PixelsDie, ConnectionState> ConnectionStateChanged;
 
     private ICommonProtocolHandler _commonProtocol;
     private IAnimationProtocolHandler _animationProtocol;
@@ -41,6 +43,7 @@ public sealed class PixelsDie : IDisposable, IAsyncDisposable
     private PixelsDie(BlePeripheral ble)
     {
         _ble = ble;
+        ble.ConnectionStateChanged += (p, s) => ConnectionStateChanged?.Invoke(this, s);
     }
 
     /// <summary>
@@ -52,7 +55,6 @@ public sealed class PixelsDie : IDisposable, IAsyncDisposable
         await _ble.ConnectAsync(DataReceived).ConfigureAwait(false);
         _ble.SendMessage(new WhoAmIMessage());
         await _idReceived.Task.ConfigureAwait(false);
-        IsConnected = true;
     }
     
     /// <summary>

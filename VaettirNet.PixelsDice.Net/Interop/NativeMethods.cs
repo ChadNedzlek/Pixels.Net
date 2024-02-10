@@ -37,6 +37,12 @@ internal static partial class NativeMethods
 
     [LibraryImport(SimpleBleLibraryName, EntryPoint = "simpleble_adapter_set_callback_on_scan_found")]
     internal static partial CallResult OnScanFound(SafeAdapterHandle adapter, ScanCallback callback, IntPtr data);
+    
+    [LibraryImport(SimpleBleLibraryName, EntryPoint = "simpleble_peripheral_set_callback_on_connected")]
+    internal static partial CallResult OnConnected(SafePeripheralHandle peripheral, ConnectionCallback callback, IntPtr data);
+    
+    [LibraryImport(SimpleBleLibraryName, EntryPoint = "simpleble_peripheral_set_callback_on_disconnected")]
+    internal static partial CallResult OnDisconnected(SafePeripheralHandle peripheral, ConnectionCallback callback, IntPtr data);
 
     [LibraryImport(SimpleBleLibraryName, EntryPoint = "simpleble_peripheral_services_count")]
     internal static partial nuint GetServiceCount(SafePeripheralHandle peripheral);
@@ -95,4 +101,10 @@ internal static partial class NativeMethods
 
     [LibraryImport(SimpleBleLibraryName, EntryPoint = "simpleble_logging_set_callback")]
     internal static partial void SetLogCallback(LogCallback callback);
+    
+    [LibraryImport(SimpleBleLibraryName, EntryPoint = "simpleble_peripheral_is_connected")]
+    internal static partial CallResult IsConnected(SafePeripheralHandle peripheral, [MarshalAs(UnmanagedType.Bool)] out bool connected);
+    
+    [LibraryImport(SimpleBleLibraryName, EntryPoint = "simpleble_peripheral_is_connectable")]
+    internal static partial CallResult IsConnectable(SafePeripheralHandle peripheral, [MarshalAs(UnmanagedType.Bool)] out bool connected);
 }
