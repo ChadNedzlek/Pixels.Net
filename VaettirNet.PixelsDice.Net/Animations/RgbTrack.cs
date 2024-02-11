@@ -6,17 +6,29 @@ namespace VaettirNet.PixelsDice.Net.Animations;
 
 public readonly record struct RgbTrack(ImmutableList<RgbKeyFrame> Frames, uint LedMask)
 {
-    internal Protocol.RgbTrack ToProtocol(GlobalAnimationData data)
+    internal Protocol.RgbTrack ToProtocol(AnimationBuffers data)
     {
-        ushort index = data.StoreKeyFrames(Frames.Select(f => f.ToProtocol(data)));
+        var list = new List<Protocol.RgbKeyFrame>();
+        foreach (RgbKeyFrame f in Frames)
+        {
+            list.Add(f.ToProtocol(data));
+        }
+
+        ushort index = data.StoreKeyFrames(list);
         return new Protocol.RgbTrack { KeyFrameOffset = index, KeyFrameCount = (byte)Frames.Count, LedMask = LedMask };
     }
 }
 
 internal static class RgbTrackExtensions
 {
-    internal static ushort ToProtocol(this IEnumerable<RgbTrack> tracks, GlobalAnimationData data)
+    internal static ushort ToProtocol(this IEnumerable<RgbTrack> tracks, AnimationBuffers data)
     {
-        return data.StoreTracks(tracks.Select(t => t.ToProtocol(data)));
+        var list = new List<Protocol.RgbTrack>();
+        foreach (RgbTrack t in tracks)
+        {
+            list.Add(t.ToProtocol(data));
+        }
+
+        return data.StoreTracks(list);
     }
 }

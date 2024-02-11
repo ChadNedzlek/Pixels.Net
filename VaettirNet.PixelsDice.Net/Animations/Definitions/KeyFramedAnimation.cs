@@ -25,7 +25,7 @@ public class KeyFramedAnimation : Animation
     {
     }
 
-    private protected override CombinedAnimationData ToProtocol(SharedAnimationData shared, GlobalAnimationData data)
+    private protected override CombinedAnimationData ToProtocol(SharedAnimationData shared, AnimationBuffers data)
     {
         ushort offset = Tracks.ToProtocol(data);
         return new CombinedAnimationData<KeyFramedAnimationData>(shared, new KeyFramedAnimationData

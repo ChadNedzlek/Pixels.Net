@@ -28,7 +28,7 @@ public class BlinkIdAnimation : Animation
     {
     }
 
-    private protected override CombinedAnimationData ToProtocol(SharedAnimationData shared, GlobalAnimationData data)
+    private protected override CombinedAnimationData ToProtocol(SharedAnimationData shared, AnimationBuffers data)
     {
         return new CombinedAnimationData<BlinkIdAnimationData>(shared,
             new BlinkIdAnimationData

@@ -43,7 +43,7 @@ public class CycleAnimation : Animation
     {
     }
 
-    private protected override CombinedAnimationData ToProtocol(SharedAnimationData shared, GlobalAnimationData data)
+    private protected override CombinedAnimationData ToProtocol(SharedAnimationData shared, AnimationBuffers data)
     {
         var gradientTrack = data.StoreTrack(Track.ToProtocol(data));
         return new CombinedAnimationData<CycleAnimationData>(shared, new CycleAnimationData

@@ -82,7 +82,7 @@ public class NormalsAnimation : Animation
     }
 
     
-    private protected override CombinedAnimationData ToProtocol(SharedAnimationData shared, GlobalAnimationData data)
+    private protected override CombinedAnimationData ToProtocol(SharedAnimationData shared, AnimationBuffers data)
     {
         ushort angleOffset = data.StoreTrack(AngleTrack.ToProtocol(data));
         ushort axisOffset = data.StoreTrack(AxisTrack.ToProtocol(data));

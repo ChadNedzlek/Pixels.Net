@@ -7,7 +7,10 @@ using System.Threading.Tasks;
 using Mono.Options;
 using VaettirNet.PixelsDice.Net;
 using VaettirNet.PixelsDice.Net.Animations;
+using VaettirNet.PixelsDice.Net.Animations.Actions;
+using VaettirNet.PixelsDice.Net.Animations.Conditions;
 using VaettirNet.PixelsDice.Net.Animations.Definitions;
+using AnimationRule = VaettirNet.PixelsDice.Net.Animations.AnimationRule;
 
 namespace CmdLine;
 
@@ -27,10 +30,12 @@ internal static class Program
 
         _logLevel = PixelsLogLevel.Error;
         List<string> urls = [];
+        bool setAnimations = false;
         OptionSet options = new()
         {
             { "verbose|v", "Verbose logging", _ => _logLevel = PixelsLogLevel.Verbose },
             { "url|u=", "URL to forward roll events", urls.Add },
+            { "anim-set", "Set animation set (will overwrite existing animations)", _ => setAnimations = true},
         };
         var rem = options.Parse(args);
         List<string> saved = null;
@@ -67,6 +72,7 @@ internal static class Program
         {
 
             var animations = BuildAnimationCollection();
+            var animationSet = BuildAnimationSet();
             
             IAsyncEnumerable<PixelsDie> search;
             if (saved != null)
@@ -84,6 +90,8 @@ internal static class Program
             {
                 found.Add(die);
                 die.RollStateChanged += DieRolled;
+                die.RemoteAction += RemoteAction;
+                
                 if (!die.IsConnected)
                 {
                     Console.WriteLine($"TO SAVE: {die.GetPersistentIdentifier()}");
@@ -97,6 +105,11 @@ internal static class Program
                     $"Connected to die {die.PixelId} (color:{die.Colorway}, type:{die.Type}, firmware:{die.BuildTimestamp.ToLocalTime()}");
 
                 await die.SendInstantAnimations(animations);
+                if (setAnimations)
+                {
+                    // await die.SendAnimationSet(animationSet);
+                }
+
                 die.PlayInstantAnimation(2, 1, 0);
             }
             
@@ -120,9 +133,26 @@ internal static class Program
         }
     }
 
-    private static AnimationCollection BuildAnimationCollection()
+    private static void RemoteAction(PixelsDie die, ushort actionId)
     {
-        return new AnimationCollection([
+        Console.WriteLine($"Die {die.PixelId}: remote action {actionId}");
+    }
+
+    private static AnimationSet BuildAnimationSet()
+    {
+        return new AnimationSet([
+            new AnimationRule(
+                new FaceCompareCondition(11, ComparisonType.GreaterThanOrEqual),
+                [
+                    new RemoteDieAction(55),
+                    // new PlayAnimationAction(1, FaceIndex.Current, BuildNoiseAnimation()),
+                ])
+        ]);
+    }
+
+    private static InstantAnimationSet BuildAnimationCollection()
+    {
+        return new InstantAnimationSet([
             BuildSimpleAnimation(Color.Purple),
             BuildSimpleAnimation(Color.Blue),
             BuildNoiseAnimation(),

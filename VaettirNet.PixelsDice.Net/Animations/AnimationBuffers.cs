@@ -1,17 +1,85 @@
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Runtime.CompilerServices;
+using VaettirNet.PixelsDice.Net.Animations.Protocol;
 
 namespace VaettirNet.PixelsDice.Net.Animations;
 
-internal class GlobalAnimationData
+internal ref struct SpanWriter<T>
+{
+    private Span<T> _buffer;
+
+    public SpanWriter(Span<T> buffer)
+    {
+        _buffer = buffer;
+        Indices = [];
+        Size = 0;
+    }
+
+    public List<int> Indices { get; }
+    public int Size { get; private set; }
+    
+    public int Count => Indices.Count;
+    public int Capacity => _buffer.Length;
+    public bool IsValid => !_buffer.IsEmpty;
+
+    public readonly void CopyTo(Span<T> destination)
+    {
+        _buffer[..Size].CopyTo(destination);
+    }
+
+    public int Write(WriteBackCallback handler)
+    {
+        var i = Size;
+        Indices.Add(i);
+        int written = handler(_buffer[i..]);
+        Size += written;
+        return Indices.Count - 1;
+    }
+
+    public delegate int WriteBackCallback(Span<T> target);
+}
+
+internal ref struct AnimationBuffers
 {
     internal readonly List<Color> Palette = [];
     internal readonly List<Protocol.RgbKeyFrame> RgbKeyFrames = [];
     internal readonly List<Protocol.RgbTrack> RgbTracks = [];
     internal readonly List<Protocol.KeyFrame> KeyFrames = [];
     internal readonly List<Protocol.Track> Tracks = [];
-    
+    internal SpanWriter<byte> AnimationBuffer;
+    internal SpanWriter<byte> ConditionBuffer;
+    internal SpanWriter<byte> ActionBuffer;
+    internal readonly List<Protocol.AnimationRuleData> Rules = [];
+
+    public AnimationBuffers()
+    {
+        AnimationBuffer = default;
+        ConditionBuffer = default;
+        ActionBuffer = default;
+    }
+
+    public AnimationBuffers(SpanWriter<byte> animations, SpanWriter<byte> conditions, SpanWriter<byte> actions)
+    {
+        AnimationBuffer = animations;
+        ConditionBuffer = conditions;
+        ActionBuffer = actions;
+    }
+
+    public static AnimationBuffers CreateHeap()
+    {
+        return new AnimationBuffers(new SpanWriter<byte>(new byte[6400]),
+            new SpanWriter<byte>(new byte[6400]),
+            new SpanWriter<byte>(new byte[6400])
+            );
+    }
+
+    public static AnimationBuffers CreateAnimationOnly()
+    {
+        return new AnimationBuffers(new SpanWriter<byte>(new byte[6400]), default, default);
+    }
+
     public byte GetPalette(Color color)
     {
         var rgb = Color.FromArgb(0, color);
@@ -92,6 +160,13 @@ internal class GlobalAnimationData
     {
         var ret = Tracks.Count;
         Tracks.AddRange(track);
+        return AsIndex(ret);
+    }
+
+    public ushort StoreRule(AnimationRuleData rule)
+    {
+        var ret = Rules.Count;
+        Rules.Add(rule);
         return AsIndex(ret);
     }
 }

@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Linq;
 using System.Runtime.InteropServices;
+using System.Security.Cryptography;
 using System.Threading.Tasks;
 using VaettirNet.PixelsDice.Net.Animations;
 using VaettirNet.PixelsDice.Net.Ble;
@@ -31,6 +33,7 @@ public sealed class PixelsDie : IDisposable, IAsyncDisposable
     public bool IsConnected => _ble.IsConnected;
     public ConnectionState ConnectionState => _ble.ConnectionState;
     public event Action<PixelsDie, ConnectionState> ConnectionStateChanged;
+    public event Action<PixelsDie, ushort> RemoteAction;
 
     private ICommonProtocolHandler _commonProtocol;
     private IAnimationProtocolHandler _animationProtocol;
@@ -93,63 +96,19 @@ public sealed class PixelsDie : IDisposable, IAsyncDisposable
         _ble.SendMessage(msg);
     }
 
-    public async Task SendInstantAnimations(AnimationCollection animations)
+    public Task SendInstantAnimations(InstantAnimationSet instantAnimations)
     {
-        SerializedAnimationData serialized = animations.Serialize();
-
-        uint hash = AnimationUtils.Hash(serialized.Buffer);
-        Logger.Instance.Log(PixelsLogLevel.Info, $"Sending hash {hash}");
-        var animSetMessage = new TransferInstantAnimSetMessage
-        {
-            PaletteSize = (ushort)(serialized.Data.Palette.Count * 3),
-            RgbKeyFrameCount = (ushort)serialized.Data.RgbKeyFrames.Count,
-            RgbTrackCount = (ushort)serialized.Data.RgbTracks.Count,
-            KeyFrameCount = (ushort)serialized.Data.KeyFrames.Count,
-            TrackCount = (ushort)serialized.Data.Tracks.Count,
-            AnimationCount = (ushort)animations.Animations.Count,
-            AnimationSize = serialized.AnimationSize,
-            Hash = hash,
-        };
-        TransferInstantAnimSetAckMessage ack = await SendAndWaitForAck<TransferInstantAnimSetMessage, TransferInstantAnimSetAckMessage>(
-            animSetMessage,
-            MessageType.TransferInstantAnimSetAck);
-
-        switch (ack.Type)
-        {
-            case TransferInstantAnimSetAckType.NoMemory:
-                throw new DeviceOutOfMemoryException("Device reported no memory for animation set");
-            case TransferInstantAnimSetAckType.UpToDate:
-                return;
-        }
-
-        await SendAndWaitForAck<BulkSetupMessage, GenericMessage>(
-            new BulkSetupMessage { Size = (ushort)serialized.Buffer.Length },
-            MessageType.BulkSetupAck);
-        
-        var finishAck = WaitForMessage<GenericMessage>(MessageType.TransferInstantAnimSetFinished);
-
-        Memory<byte> remBuffer = serialized.Buffer.AsMemory();
-        int offset = 0;
-        while (!remBuffer.IsEmpty)
-        {
-            byte len = (byte)Math.Min(100, remBuffer.Length);
-            var toSend = remBuffer[..len];
-            var msg = new BulkDataMessage{Offset = (ushort)offset, Size = len};
-            unsafe
-            {
-                toSend.Span.CopyTo(new Span<byte>(msg.Data, 100));
-            }
-            _ = await SendAndWaitForAck<BulkDataMessage, BulkDataAckMessage>(msg, MessageType.BulkDataAck);
-            offset += len;
-            remBuffer = remBuffer[len..];
-        }
-
-        await finishAck;
+        return _animationProtocol.SendInstantAnimationsAsync(this, instantAnimations);
+    }
+    
+    public Task SendAnimationSet(AnimationSet animationSet)
+    {
+        return _animationProtocol.SendAnimationSetAsync(this, animationSet);
     }
 
     public void PlayInstantAnimation(int index, int loopCount, byte faceIndex)
     {
-        _animationProtocol.PlayInstantAnimation(_ble, index, loopCount, faceIndex);
+        _animationProtocol.PlayInstantAnimation(this, index, loopCount, faceIndex);
     }
 
     public void StopAllAnimations()
@@ -204,6 +163,16 @@ public sealed class PixelsDie : IDisposable, IAsyncDisposable
             case MessageType.RollState:
                 HandleDieRoll(MemoryMarshal.Read<RollStateMessage>(msg));
                 break;
+            case MessageType.RemoteAction:
+            {
+                Action<PixelsDie, ushort> action = RemoteAction;
+                if (action != null)
+                {
+                    var remoteActionMessage = MemoryMarshal.Read<RemoteActionMessage>(msg);
+                    action(this, remoteActionMessage.ActionId);
+                }
+                break;
+            }
             case MessageType.BatteryLevel:
                 HandleBatteryMessage(MemoryMarshal.Read<BatteryLevelMessage>(msg));
                 break;
@@ -233,18 +202,38 @@ public sealed class PixelsDie : IDisposable, IAsyncDisposable
         RollStateChanged?.Invoke(this, msg.RollState, GetFaceValue(Type, msg.CurrentFace), msg.CurrentFace);
     }
 
-    public int GetFaceValue(DieType dieType, int value)
+    public int GetFaceValue(int value) => GetFaceValue(Type, value);
+
+    public static int GetFaceValue(DieType dieType, int value)
     {
         return dieType switch
         {
             DieType.FD6 => value switch
-                {
-                    2 or 5 => -1,
-                    1 or 6 => 1,
-                    _ => 0,
-                },
+            {
+                2 or 5 => -1,
+                1 or 6 => 1,
+                _ => 0,
+            },
             DieType.D00 => value * 10,
             _ => value + 1,
+        };
+    }
+    
+    public int GetFaceIndex(int value) => GetFaceValue(Type, value);
+    
+    public static int GetFaceIndex(DieType dieType, int value)
+    {
+        return dieType switch
+        {
+            DieType.FD6 => value switch
+            {
+                1 => 6,
+                0 => 4,
+                -1 => 2,
+                _ => throw new ArgumentOutOfRangeException(nameof(value), value, null)
+            },
+            DieType.D00 => value / 10,
+            _ => value - 1,
         };
     }
 
@@ -300,6 +289,30 @@ public sealed class PixelsDie : IDisposable, IAsyncDisposable
         return die;
     }
 
+    private static async Task SendBulkDataAsync(PixelsDie die, byte[] buffer)
+    {
+        await die.SendAndWaitForAck<BulkSetupMessage, GenericMessage>(
+            new BulkSetupMessage { Size = (ushort)buffer.Length },
+            MessageType.BulkSetupAck);
+
+        Memory<byte> remBuffer = buffer.AsMemory();
+        int offset = 0;
+        while (!remBuffer.IsEmpty)
+        {
+            byte len = (byte)Math.Min(100, remBuffer.Length);
+            Memory<byte> toSend = remBuffer[..len];
+            var msg = new BulkDataMessage { Offset = (ushort)offset, Size = len };
+            unsafe
+            {
+                toSend.Span.CopyTo(new Span<byte>(msg.Data, 100));
+            }
+
+            _ = await die.SendAndWaitForAck<BulkDataMessage, BulkDataAckMessage>(msg, MessageType.BulkDataAck);
+            offset += len;
+            remBuffer = remBuffer[len..];
+        }
+    }
+
     private interface ICommonProtocolHandler
     {
         void IAmADie(PixelsDie pixelsDie, ReadOnlySpan<byte> msg);
@@ -325,15 +338,118 @@ public sealed class PixelsDie : IDisposable, IAsyncDisposable
 
     private interface IAnimationProtocolHandler
     {
-        void PlayInstantAnimation(BlePeripheral ble, int index, int loopCount, byte faceIndex);
+        void PlayInstantAnimation(PixelsDie die, int index, int loopCount, byte faceIndex);
+        Task SendInstantAnimationsAsync(PixelsDie die, InstantAnimationSet instantAnimations);
+        Task SendAnimationSetAsync(PixelsDie die, AnimationSet animationSet);
     }
 
     private class PrereleaseAnimationProtocolHandler : IAnimationProtocolHandler
     {
-        public void PlayInstantAnimation(BlePeripheral ble, int index, int loopCount, byte faceIndex)
+        public void PlayInstantAnimation(PixelsDie die, int index, int loopCount, byte faceIndex)
         {
-            ble.SendMessage(new PlayInstantAnimationMessage
-                { Animation = (byte)index, LoopCount = (byte)0, FaceIndex = faceIndex });
+            die._ble.SendMessage(new PlayInstantAnimationMessage
+                { Animation = (byte)index, LoopCount = 0, FaceIndex = faceIndex });
+        }
+
+        public Task SendInstantAnimationsAsync(PixelsDie die, InstantAnimationSet instantAnimations)
+        {
+            SerializedAnimationData serialized = instantAnimations.Serialize();
+
+            uint hash = AnimationUtils.Hash(serialized.Buffer);
+            Logger.Instance.Log(PixelsLogLevel.Info, $"Sending hash {hash}");
+            var animSetMessage = new TransferInstantAnimSetMessage
+            {
+                PaletteSize = (ushort)(serialized.Data.Palette.Count * 3),
+                RgbKeyFrameCount = (ushort)serialized.Data.RgbKeyFrames.Count,
+                RgbTrackCount = (ushort)serialized.Data.RgbTracks.Count,
+                KeyFrameCount = (ushort)serialized.Data.KeyFrames.Count,
+                TrackCount = (ushort)serialized.Data.Tracks.Count,
+                AnimationCount = (ushort)serialized.Data.AnimationBuffer.Count,
+                AnimationSize = (ushort)serialized.Data.AnimationBuffer.Size,
+                Hash = hash,
+            };
+            byte[] buffer = serialized.Buffer;
+            
+            return SendAnimations();
+
+            async Task SendAnimations()
+            {
+                TransferInstantAnimSetAckMessage ack =
+                    await die.SendAndWaitForAck<TransferInstantAnimSetMessage, TransferInstantAnimSetAckMessage>(
+                        animSetMessage,
+                        MessageType.TransferInstantAnimSetAck);
+
+                switch (ack.Type)
+                {
+                    case TransferInstantAnimSetAckType.NoMemory:
+                        throw new DeviceOutOfMemoryException("Device reported no memory for animation set");
+                    case TransferInstantAnimSetAckType.UpToDate:
+                        return;
+                }
+                
+                Task<GenericMessage> finishAck = die.WaitForMessage<GenericMessage>(MessageType.TransferInstantAnimSetFinished);
+                Task bulkData = SendBulkDataAsync(die, buffer);
+
+                await Task.WhenAll(finishAck, bulkData);
+            }
+        }
+
+        public Task SendAnimationSetAsync(PixelsDie die, AnimationSet animationSet)
+        {
+            SerializedAnimationData serialized = animationSet.Serialize();
+
+            uint hash = AnimationUtils.Hash(serialized.Buffer);
+            Logger.Instance.Log(PixelsLogLevel.Info, $"Sending hash {hash}");
+            var animSetMessage = new TransferAnimSetMessage()
+            {
+                PaletteSize = (ushort)(serialized.Data.Palette.Count * 3),
+                RgbKeyFrameCount = (ushort)serialized.Data.RgbKeyFrames.Count,
+                RgbTrackCount = (ushort)serialized.Data.RgbTracks.Count,
+                KeyFrameCount = (ushort)serialized.Data.KeyFrames.Count,
+                TrackCount = (ushort)serialized.Data.Tracks.Count,
+                AnimationCount = (ushort)serialized.Data.AnimationBuffer.Count,
+                AnimationSize = (ushort)serialized.Data.AnimationBuffer.Size,
+                ActionCount = (ushort)serialized.Data.ActionBuffer.Count,
+                ActionSize = (ushort)serialized.Data.ActionBuffer.Size,
+                ConditionCount = (ushort)serialized.Data.ConditionBuffer.Count,
+                ConditionSize = (ushort)serialized.Data.ConditionBuffer.Size,
+                RuleCount = (ushort)serialized.Data.Rules.Count
+            };
+            
+            byte[] buffer = serialized.Buffer;
+            
+            return SendAnimationsAsync();
+
+            async Task SendAnimationsAsync()
+            {
+                var ack = await die.SendAndWaitForAck<TransferAnimSetMessage, TransferAnimSetAckMessage>(
+                        animSetMessage,
+                        MessageType.TransferAnimSetAck);
+
+                if (ack.Result == 0)
+                {
+                    Logger.Instance.Log(PixelsLogLevel.Error, "Die refused animation set");
+                    return;
+                }
+
+                Task<GenericMessage> finish = die.WaitForMessage<GenericMessage>(MessageType.TransferAnimSetFinished);
+                
+                Task bulkData = SendBulkDataAsync(die, buffer);
+
+                List<Task> waitingTask = [finish, bulkData];
+                while (waitingTask.Count > 0)
+                {
+                    var comp = await Task.WhenAny(waitingTask);
+                    waitingTask.Remove(comp);
+                    if (comp == finish)
+                    {
+                        var res = await finish;
+                    }
+                    else if (comp == bulkData)
+                    {
+                    }
+                }
+            }
         }
     }
 }
