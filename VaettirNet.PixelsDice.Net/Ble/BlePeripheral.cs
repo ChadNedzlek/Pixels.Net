@@ -81,7 +81,7 @@ internal sealed class BlePeripheral : IDisposable, IAsyncDisposable
 
     private void OnDisconnected(IntPtr peripheral, IntPtr userdata)
     {
-        Logger.Instance.Log(PixelsLogLevel.Info, "Connection to device lost... reconnecting...");
+        Logger.Instance.Log(PixelsLogLevel.Info, $"Connection to device (id: {Id}, addr: {Address}) lost... reconnecting...");
         SetConnectionState(ConnectionState.Reconnecting);
         lock (_reconnectLock)
         {
@@ -103,7 +103,7 @@ internal sealed class BlePeripheral : IDisposable, IAsyncDisposable
     {
         while (!cancellationToken.IsCancellationRequested)
         {
-            var result = NativeMethods.IsConnectable(_handle, out var connectable);
+            CallResult result = NativeMethods.IsConnectable(_handle, out bool connectable);
 
             if (result == CallResult.Failure || connectable == false)
             {
@@ -117,7 +117,7 @@ internal sealed class BlePeripheral : IDisposable, IAsyncDisposable
             {
                 case CallResult.Success:
                     // We are reconnected, wait until we get disconnected again
-                    result = NativeMethods.IsConnected(_handle, out var connected);
+                    result = NativeMethods.IsConnected(_handle, out bool connected);
                     if (result == CallResult.Failure || connected == false)
                     {
                         // We didn't really connect, try again
@@ -125,7 +125,7 @@ internal sealed class BlePeripheral : IDisposable, IAsyncDisposable
                         continue;
                     }
                     
-                    Logger.Instance.Log(PixelsLogLevel.Info, "Device reconnected");
+                    Logger.Instance.Log(PixelsLogLevel.Info, $"Device (id: {Id}, addr: {Address}) reconnected");
 
                     await _disconnectedEvent.WaitAsync(cancellationToken);
                     break;
@@ -178,7 +178,7 @@ internal sealed class BlePeripheral : IDisposable, IAsyncDisposable
 
         if (runningTask != null)
         {
-            await _reconnectTask.IgnoreCancellation(_reconnectCancellation.Token);
+            await runningTask.IgnoreCancellation(_reconnectCancellation.Token);
         }
     }
 

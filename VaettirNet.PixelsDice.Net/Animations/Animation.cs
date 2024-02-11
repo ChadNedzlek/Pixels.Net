@@ -15,9 +15,10 @@ public abstract class Animation
         DurationMs = durationMs;
     }
 
-    internal CombinedAnimationData ToProtocol(GlobalAnimationData data)
+    internal int ToProtocol(ref AnimationBuffers data)
     {
-        return ToProtocol(
+        ref SpanWriter<byte> buffer = ref data.AnimationBuffer;
+        CombinedAnimationData protocol = ToProtocol(
             new SharedAnimationData
             {
                 Type = Type,
@@ -25,7 +26,12 @@ public abstract class Animation
                 Duration = (ushort)DurationMs,
             },
             data);
+        return buffer.Write(b =>
+        {
+            protocol.Write(b);
+            return protocol.Size;
+        });
     }
 
-    private protected abstract CombinedAnimationData ToProtocol(SharedAnimationData shared, GlobalAnimationData data);
+    private protected abstract CombinedAnimationData ToProtocol(SharedAnimationData shared, AnimationBuffers data);
 }

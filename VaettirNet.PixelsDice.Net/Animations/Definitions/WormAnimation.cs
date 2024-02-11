@@ -48,7 +48,7 @@ public class WormAnimation : Animation
     {
     }
     
-    private protected override CombinedAnimationData ToProtocol(SharedAnimationData shared, GlobalAnimationData data)
+    private protected override CombinedAnimationData ToProtocol(SharedAnimationData shared, AnimationBuffers data)
     {
         ushort trackOffset = data.StoreTrack(Track.ToProtocol(data));
         return new CombinedAnimationData<WormAnimationData>(shared, new WormAnimationData
@@ -58,7 +58,11 @@ public class WormAnimation : Animation
             CyclesTimes10 = (byte)(Cycles * 10),
             Fade = (byte)(Fade * 255),
             GradientTrackOffset = trackOffset,
-            Intensity = Intensity * 255,
+            Intensity = (byte)(Intensity * 255),
         });
     }
+}
+
+public class AnimationRule
+{
 }

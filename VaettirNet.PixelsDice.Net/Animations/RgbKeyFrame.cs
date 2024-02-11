@@ -18,7 +18,7 @@ public readonly struct RgbKeyFrame
     {
     }
 
-    internal Protocol.RgbKeyFrame ToProtocol(GlobalAnimationData data)
+    internal Protocol.RgbKeyFrame ToProtocol(AnimationBuffers data)
     {
         byte palette = data.GetPalette(Color);
         return Protocol.RgbKeyFrame.Create(palette, TimeOffsetMs);

@@ -21,7 +21,7 @@ internal abstract class CombinedAnimationData
     public void Write(Span<byte> buffer)
     {
         MemoryMarshal.Write(buffer, Shared);
-        WriteUniqueData(buffer);
+        WriteUniqueData(buffer[SharedDataSize..]);
     }
 
     public void Write(ref Span<byte> buffer)

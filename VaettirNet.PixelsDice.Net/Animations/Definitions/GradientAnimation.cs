@@ -29,7 +29,7 @@ public class GradientAnimation : Animation
     {
     }
     
-    private protected override CombinedAnimationData ToProtocol(SharedAnimationData shared, GlobalAnimationData data)
+    private protected override CombinedAnimationData ToProtocol(SharedAnimationData shared, AnimationBuffers data)
     {
         ushort track = data.StoreTrack(Track.ToProtocol(data));
         return new CombinedAnimationData<GradientAnimationData>(shared, new GradientAnimationData

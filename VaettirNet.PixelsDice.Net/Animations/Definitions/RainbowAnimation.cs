@@ -53,7 +53,7 @@ public class RainbowAnimation : Animation
     {
     }
 
-    private protected override CombinedAnimationData ToProtocol(SharedAnimationData shared, GlobalAnimationData data)
+    private protected override CombinedAnimationData ToProtocol(SharedAnimationData shared, AnimationBuffers data)
     {
         return new CombinedAnimationData<RainbowAnimationData>(shared,
             new RainbowAnimationData

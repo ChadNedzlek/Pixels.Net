@@ -8,7 +8,7 @@ internal struct WormAnimationData
     public uint FaceMask;
     public byte Count;
     public byte Fade;
-    public double Intensity;
+    public byte Intensity;
     public byte CyclesTimes10;
     public ushort GradientTrackOffset;
 }

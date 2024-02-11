@@ -17,7 +17,7 @@ public readonly struct KeyFrame
     {
     }
 
-    internal Protocol.KeyFrame ToProtocol(GlobalAnimationData data)
+    internal Protocol.KeyFrame ToProtocol(AnimationBuffers data)
     {
         return Protocol.KeyFrame.Create((byte)(Intensity * 127), TimeOffsetMs);
     }

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using VaettirNet.PixelsDice.Net.Animations.Protocol.AnimationData;
@@ -40,9 +41,15 @@ public class GradientPatternAnimation : Animation
         OverrideWithFace = overrideWithFace;
     }
 
-    private protected override CombinedAnimationData ToProtocol(SharedAnimationData shared, GlobalAnimationData data)
+    private protected override CombinedAnimationData ToProtocol(SharedAnimationData shared, AnimationBuffers data)
     {
-        ushort trackOffset = data.StoreTracks(Tracks.Select(t => t.ToProtocol(data)));
+        var list = new List<Protocol.Track>();
+        foreach (Track t in Tracks)
+        {
+            list.Add(t.ToProtocol(data));
+        }
+
+        ushort trackOffset = data.StoreTracks(list);
         ushort gradientTrack = data.StoreTrack(ColorTrack.ToProtocol(data));
         return new CombinedAnimationData<GradientPatternAnimationData>(shared,
             new GradientPatternAnimationData

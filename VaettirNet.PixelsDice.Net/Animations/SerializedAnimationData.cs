@@ -1,3 +1,13 @@
 namespace VaettirNet.PixelsDice.Net.Animations;
 
-internal record struct SerializedAnimationData(ushort AnimationSize, GlobalAnimationData Data, byte[] Buffer);
+internal ref struct SerializedAnimationData
+{
+    public SerializedAnimationData(AnimationBuffers data, byte[] buffer)
+    {
+        Data = data;
+        Buffer = buffer;
+    }
+
+    public readonly AnimationBuffers Data;
+    public readonly byte[] Buffer;
+}
