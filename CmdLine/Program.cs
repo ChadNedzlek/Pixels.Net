@@ -110,7 +110,7 @@ internal static class Program
                     await die.SendAnimationSet(animationSet);
                 }
 
-                die.PlayInstantAnimation(2, 1, 0);
+                die.PlayInstantAnimation(3, 1, 0);
             }
             
             Console.WriteLine($"Found {found.Count} dice!");
