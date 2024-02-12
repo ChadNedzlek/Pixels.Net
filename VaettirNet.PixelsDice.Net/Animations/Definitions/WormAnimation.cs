@@ -48,9 +48,9 @@ public class WormAnimation : Animation
     {
     }
     
-    private protected override CombinedAnimationData ToProtocol(SharedAnimationData shared, AnimationBuffers data)
+    private protected override CombinedAnimationData ToProtocol(SharedAnimationData shared, ref AnimationBuffers data)
     {
-        ushort trackOffset = data.StoreTrack(Track.ToProtocol(data));
+        ushort trackOffset = data.StoreTrack(Track.ToProtocol(ref data));
         return new CombinedAnimationData<WormAnimationData>(shared, new WormAnimationData
         {
             FaceMask = FaceMask,

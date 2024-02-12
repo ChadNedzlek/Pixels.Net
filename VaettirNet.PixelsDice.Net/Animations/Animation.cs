@@ -25,7 +25,7 @@ public abstract class Animation
                 Flags = Flags,
                 Duration = (ushort)DurationMs,
             },
-            data);
+            ref data);
         return buffer.Write(b =>
         {
             protocol.Write(b);
@@ -33,5 +33,5 @@ public abstract class Animation
         });
     }
 
-    private protected abstract CombinedAnimationData ToProtocol(SharedAnimationData shared, AnimationBuffers data);
+    private protected abstract CombinedAnimationData ToProtocol(SharedAnimationData shared, ref AnimationBuffers data);
 }

@@ -29,9 +29,9 @@ public class GradientAnimation : Animation
     {
     }
     
-    private protected override CombinedAnimationData ToProtocol(SharedAnimationData shared, AnimationBuffers data)
+    private protected override CombinedAnimationData ToProtocol(SharedAnimationData shared, ref AnimationBuffers data)
     {
-        ushort track = data.StoreTrack(Track.ToProtocol(data));
+        ushort track = data.StoreTrack(Track.ToProtocol(ref data));
         return new CombinedAnimationData<GradientAnimationData>(shared, new GradientAnimationData
         {
             FaceMask = FaceMask,

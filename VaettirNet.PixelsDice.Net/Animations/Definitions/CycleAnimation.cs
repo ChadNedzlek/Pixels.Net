@@ -43,9 +43,9 @@ public class CycleAnimation : Animation
     {
     }
 
-    private protected override CombinedAnimationData ToProtocol(SharedAnimationData shared, AnimationBuffers data)
+    private protected override CombinedAnimationData ToProtocol(SharedAnimationData shared, ref AnimationBuffers data)
     {
-        var gradientTrack = data.StoreTrack(Track.ToProtocol(data));
+        var gradientTrack = data.StoreTrack(Track.ToProtocol(ref data));
         return new CombinedAnimationData<CycleAnimationData>(shared, new CycleAnimationData
         {
             Count = Count,

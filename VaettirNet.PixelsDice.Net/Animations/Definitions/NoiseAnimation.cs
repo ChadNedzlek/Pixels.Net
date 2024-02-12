@@ -156,10 +156,10 @@ public class NoiseAnimation : Animation
 
     public const double MaxBlinksPerSecond = ushort.MaxValue / 1000.0;
 
-    private protected override CombinedAnimationData ToProtocol(SharedAnimationData shared, AnimationBuffers data)
+    private protected override CombinedAnimationData ToProtocol(SharedAnimationData shared, ref AnimationBuffers data)
     {
-        ushort overallTrack = data.StoreTrack(OverallGradient.ToProtocol(data));
-        ushort individualTrack = data.StoreTrack(IndividualGradient.ToProtocol(data));
+        ushort overallTrack = data.StoreTrack(OverallGradient.ToProtocol(ref data));
+        ushort individualTrack = data.StoreTrack(IndividualGradient.ToProtocol(ref data));
         return new CombinedAnimationData<NoiseAnimationData>(
             shared,
             new NoiseAnimationData

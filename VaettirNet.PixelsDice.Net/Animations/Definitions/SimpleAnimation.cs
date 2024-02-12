@@ -41,7 +41,7 @@ public class SimpleAnimation : Animation
     }
 
 
-    private protected override CombinedAnimationData ToProtocol(SharedAnimationData shared, AnimationBuffers data)
+    private protected override CombinedAnimationData ToProtocol(SharedAnimationData shared, ref AnimationBuffers data)
     {
         var color = data.GetPalette(Color);
         return new CombinedAnimationData<SimpleAnimationData>(shared, new SimpleAnimationData

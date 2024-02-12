@@ -82,11 +82,11 @@ public class NormalsAnimation : Animation
     }
 
     
-    private protected override CombinedAnimationData ToProtocol(SharedAnimationData shared, AnimationBuffers data)
+    private protected override CombinedAnimationData ToProtocol(SharedAnimationData shared, ref AnimationBuffers data)
     {
-        ushort angleOffset = data.StoreTrack(AngleTrack.ToProtocol(data));
-        ushort axisOffset = data.StoreTrack(AxisTrack.ToProtocol(data));
-        ushort timeOffset = data.StoreTrack(TimeTrack.ToProtocol(data));
+        ushort angleOffset = data.StoreTrack(AngleTrack.ToProtocol(ref data));
+        ushort axisOffset = data.StoreTrack(AxisTrack.ToProtocol(ref data));
+        ushort timeOffset = data.StoreTrack(TimeTrack.ToProtocol(ref data));
         return new CombinedAnimationData<NormalsAnimationData>(shared, new NormalsAnimationData
         {
             Fade = (byte)(Fade * 255),

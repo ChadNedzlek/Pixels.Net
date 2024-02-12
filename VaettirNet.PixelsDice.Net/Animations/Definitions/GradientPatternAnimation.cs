@@ -41,16 +41,16 @@ public class GradientPatternAnimation : Animation
         OverrideWithFace = overrideWithFace;
     }
 
-    private protected override CombinedAnimationData ToProtocol(SharedAnimationData shared, AnimationBuffers data)
+    private protected override CombinedAnimationData ToProtocol(SharedAnimationData shared, ref AnimationBuffers data)
     {
         var list = new List<Protocol.Track>();
         foreach (Track t in Tracks)
         {
-            list.Add(t.ToProtocol(data));
+            list.Add(t.ToProtocol(ref data));
         }
 
         ushort trackOffset = data.StoreTracks(list);
-        ushort gradientTrack = data.StoreTrack(ColorTrack.ToProtocol(data));
+        ushort gradientTrack = data.StoreTrack(ColorTrack.ToProtocol(ref data));
         return new CombinedAnimationData<GradientPatternAnimationData>(shared,
             new GradientPatternAnimationData
             {

@@ -10,6 +10,7 @@ public readonly struct RgbKeyFrame
 
     public RgbKeyFrame(Color color, uint timeOffsetMs)
     {
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(timeOffsetMs, (uint)1000);
         Color = color;
         TimeOffsetMs = timeOffsetMs;
     }
@@ -18,7 +19,7 @@ public readonly struct RgbKeyFrame
     {
     }
 
-    internal Protocol.RgbKeyFrame ToProtocol(AnimationBuffers data)
+    internal Protocol.RgbKeyFrame ToProtocol(ref AnimationBuffers data)
     {
         byte palette = data.GetPalette(Color);
         return Protocol.RgbKeyFrame.Create(palette, TimeOffsetMs);
