@@ -107,7 +107,7 @@ internal static class Program
                 await die.SendInstantAnimations(animations);
                 if (setAnimations)
                 {
-                    // await die.SendAnimationSet(animationSet);
+                    await die.SendAnimationSet(animationSet);
                 }
 
                 die.PlayInstantAnimation(2, 1, 0);
@@ -144,8 +144,8 @@ internal static class Program
             new AnimationRule(
                 new FaceCompareCondition(11, ComparisonType.GreaterThanOrEqual),
                 [
+                    new PlayAnimationAction(1, FaceIndex.Current, BuildNoiseAnimation()),
                     new RemoteDieAction(55),
-                    // new PlayAnimationAction(1, FaceIndex.Current, BuildNoiseAnimation()),
                 ])
         ]);
     }
