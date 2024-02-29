@@ -97,6 +97,13 @@ public sealed class PixelsDie : IDisposable, IAsyncDisposable
 
                 await _ble.ConnectAsync();
                 Logger.Instance.Log(PixelsLogLevel.Info, $"Device {_ble.Address} reconnected");
+                lock (_disconnectLock)
+                {
+                    _reconnectCancel = null;
+                    _reconnectTask = null;
+                }
+
+                return;
             }
             catch
             {
@@ -347,6 +354,7 @@ public sealed class PixelsDie : IDisposable, IAsyncDisposable
 
     public async ValueTask DisposeAsync()
     {
+        _reconnectCancel?.Cancel();
         if (ConnectionState == ConnectionState.Connected)
             await _ble.DisconnectAsync();
         _ble.Dispose();
