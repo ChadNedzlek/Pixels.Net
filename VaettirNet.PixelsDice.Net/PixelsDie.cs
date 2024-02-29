@@ -1,12 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.Linq;
 using System.Runtime.InteropServices;
-using System.Security.Cryptography;
+using System.Threading;
 using System.Threading.Tasks;
+using VaettirNet.Btleplug;
 using VaettirNet.PixelsDice.Net.Animations;
-using VaettirNet.PixelsDice.Net.Ble;
 using VaettirNet.PixelsDice.Net.Messages;
 
 namespace VaettirNet.PixelsDice.Net;
@@ -18,7 +17,7 @@ public delegate void RollStateChanged(PixelsDie source, RollState state, int val
 /// </summary>
 public sealed class PixelsDie : IDisposable, IAsyncDisposable
 {
-    private readonly BlePeripheral _ble;
+    private readonly BtlePeripheral _ble;
 
     public int LedCount { get; private set; }
     public DieType Type { get; private set; }
@@ -30,8 +29,9 @@ public sealed class PixelsDie : IDisposable, IAsyncDisposable
     public int BatteryLevel { get; private set; }
     public int BatteryState { get; private set; }
 
-    public bool IsConnected => _ble.IsConnected;
-    public ConnectionState ConnectionState => _ble.ConnectionState;
+    public ConnectionState ConnectionState { get; private set; }
+    public bool IsConnected => ConnectionState == ConnectionState.Connected;
+
     public event Action<PixelsDie, ConnectionState> ConnectionStateChanged;
     public event Action<PixelsDie, ushort> RemoteAction;
 
@@ -43,10 +43,68 @@ public sealed class PixelsDie : IDisposable, IAsyncDisposable
     /// </summary>
     public event RollStateChanged RollStateChanged;
 
-    private PixelsDie(BlePeripheral ble)
+    private PixelsDie(BtlePeripheral ble)
     {
         _ble = ble;
-        ble.ConnectionStateChanged += (p, s) => ConnectionStateChanged?.Invoke(this, s);
+        ble.Disconnected += Disconnected;
+    }
+
+    private readonly object _disconnectLock = new();
+    private bool _shouldTryReconnect;
+    private Task _reconnectTask;
+    private CancellationTokenSource _reconnectCancel;
+    private void Disconnected(BtlePeripheral obj)
+    {
+        if (!_shouldTryReconnect || _reconnectTask != null)
+        {
+            SetConnectionState(ConnectionState.Disconnected);
+            return;
+        }
+
+        lock (_disconnectLock)
+        {
+            if (!_shouldTryReconnect || _reconnectTask != null)
+            {
+                SetConnectionState(ConnectionState.Disconnected);
+                return;
+            }
+
+            Logger.Instance.Log(PixelsLogLevel.Info, $"Lost device {obj.Address}, attempting reconnect");
+            SetConnectionState(ConnectionState.Reconnecting);
+            _reconnectCancel = new CancellationTokenSource();
+            _reconnectTask = Task.Run(() => AttemptReconnect(_reconnectCancel.Token));
+        }
+    }
+
+    private void SetConnectionState(ConnectionState conn)
+    {
+        ConnectionState = conn;
+        ConnectionStateChanged?.Invoke(this, conn);
+    }
+
+    private async Task AttemptReconnect(CancellationToken cancellationToken)
+    {
+        int delaySeconds = 1;
+        while (true)
+        {
+            try
+            {
+                if (await _ble.IsConnectedAsync())
+                {
+                    SetConnectionState(ConnectionState.Connected);
+                    return;
+                }
+
+                await _ble.ConnectAsync();
+                Logger.Instance.Log(PixelsLogLevel.Info, $"Device {_ble.Address} reconnected");
+            }
+            catch
+            {
+                Logger.Instance.Log(PixelsLogLevel.Info, $"Could not reconnect {_ble.Address}, trying again in {delaySeconds} seconds");
+                await Task.Delay(TimeSpan.FromSeconds(delaySeconds), cancellationToken);
+                delaySeconds = int.Min(10, delaySeconds + 1);
+            }
+        }
     }
 
     /// <summary>
@@ -55,8 +113,12 @@ public sealed class PixelsDie : IDisposable, IAsyncDisposable
     /// </summary>
     public async Task ConnectAsync()
     {
-        await _ble.ConnectAsync(DataReceived).ConfigureAwait(false);
-        _ble.SendMessage(new WhoAmIMessage());
+        _shouldTryReconnect = true;
+        await _ble.ConnectAsync().ConfigureAwait(false);
+        // If we don't scan for services, the registration will fail, claiming it's not a valid registration
+        var services = await _ble.GetServicesAsync();
+        await _ble.RegisterNotificationCallback(PixelsId.PixelsServiceUuid, PixelsId.NotifyCharacteristicUuid, DataReceived);
+        await SendMessage(new WhoAmIMessage());
         await _idReceived.Task.ConfigureAwait(false);
     }
     
@@ -66,7 +128,7 @@ public sealed class PixelsDie : IDisposable, IAsyncDisposable
     /// </summary>
     public string GetPersistentIdentifier()
     {
-        return _ble.GetPersistentId();
+        return _ble.Address.ToString("X");
     }
 
     /// <summary>
@@ -78,7 +140,7 @@ public sealed class PixelsDie : IDisposable, IAsyncDisposable
     /// <param name="faceMask">Which faces to blink</param>
     /// <param name="fade">Fade strength (0 = no fade, 1.0 = maximum fade)</param>
     /// <param name="loop">True to repeat the blinking animation</param>
-    public void Blink(int count, TimeSpan duration, Color color, int faceMask, double fade, bool loop)
+    public Task BlinkAsync(int count, TimeSpan duration, Color color, int faceMask, double fade, bool loop)
     {
         ArgumentOutOfRangeException.ThrowIfNegative(count);
         ArgumentOutOfRangeException.ThrowIfLessThan(fade, 0);
@@ -93,7 +155,25 @@ public sealed class PixelsDie : IDisposable, IAsyncDisposable
             Loop = loop,
             DurationMs = (short)duration.TotalMilliseconds
         };
-        _ble.SendMessage(msg);
+        return SendMessage(msg);
+    }
+
+    private async Task SendMessage<T>(T msg) where T : struct
+    {
+        await _ble.Write(
+            PixelsId.PixelsServiceUuid,
+            PixelsId.WriteCharacteristicUuid,
+            GetBuffer(msg),
+            true
+        );
+
+        byte[] GetBuffer(T m)
+        {
+            var span = MemoryMarshal.Cast<T, byte>(new Span<T>(ref m));
+            var b = new byte[span.Length];
+            span.CopyTo(b);
+            return b;
+        }
     }
 
     public Task SendInstantAnimations(InstantAnimationSet instantAnimations)
@@ -106,14 +186,14 @@ public sealed class PixelsDie : IDisposable, IAsyncDisposable
         return _animationProtocol.SendAnimationSetAsync(this, animationSet);
     }
 
-    public void PlayInstantAnimation(int index, int loopCount, byte faceIndex)
+    public Task PlayInstantAnimationAsync(int index, int loopCount, byte faceIndex)
     {
-        _animationProtocol.PlayInstantAnimation(this, index, loopCount, faceIndex);
+        return _animationProtocol.PlayInstantAnimationAsync(this, index, loopCount, faceIndex);
     }
 
-    public void StopAllAnimations()
+    public Task StopAllAnimationsAsync()
     {
-        _ble.SendMessage(new GenericMessage(MessageType.StopAllAnims));
+        return SendMessage(new GenericMessage(MessageType.StopAllAnims));
     }
 
     private Task<TAck> SendAndWaitForAck<TMessage, TAck>(TMessage message, MessageType ackType)
@@ -122,10 +202,10 @@ public sealed class PixelsDie : IDisposable, IAsyncDisposable
     {
         var src = new TaskCompletionSource<object>();
         _ackHandlers[ackType] = (src, msg => MemoryMarshal.Read<TAck>(msg));
-        _ble.SendMessage(message);
         return Wait();
         async Task<TAck> Wait()
         {
+            await SendMessage(message);
             var ret = (TAck)await src.Task;
             _ackHandlers.Remove(ackType);
             return ret;
@@ -149,7 +229,7 @@ public sealed class PixelsDie : IDisposable, IAsyncDisposable
     private delegate object SerializeAck(ReadOnlySpan<byte> data);
     private readonly Dictionary<MessageType, (TaskCompletionSource<object> recieved, SerializeAck serialize)> _ackHandlers = [];
     
-    private void DataReceived(ReadOnlySpan<byte> msg)
+    private void DataReceived(BtlePeripheral peripheral, Guid service, Guid characteristic, Span<byte> msg)
     {
         if (msg.Length == 0)
             return;
@@ -262,31 +342,19 @@ public sealed class PixelsDie : IDisposable, IAsyncDisposable
 
     public void Dispose()
     {
+        DisposeAsync().AsTask().GetAwaiter().GetResult();
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (ConnectionState == ConnectionState.Connected)
+            await _ble.DisconnectAsync();
         _ble.Dispose();
     }
 
-    public ValueTask DisposeAsync()
+    internal static PixelsDie Create(BtlePeripheral ble)
     {
-        return _ble.DisposeAsync();
-    }
-
-    internal static PixelsDie Create(BlePeripheral ble)
-    {
-        var data = ble.GetManufacturerData();
-        if (data.Length != 1)
-            throw new ArgumentException("No manufacturer data found on peripheral");
-        if (data[0].Length != 5)
-            throw new ArgumentException($"Incorrect manufacturer data found on peripheral (length {data[0].Length})");
-        var die = new PixelsDie(ble);
-        var m = data[0];
-        die.LedCount = m[0];
-        var other = m[1];
-        die.RollState = (RollState)m[2];
-        die.CurrentFace = m[3];
-        var battery = m[4];
-        die.BatteryLevel = battery & 0x7F;
-        die.BatteryState = battery & 0x80;
-        return die;
+        return new PixelsDie(ble);
     }
 
     private static async Task SendBulkDataAsync(PixelsDie die, byte[] buffer)
@@ -338,16 +406,16 @@ public sealed class PixelsDie : IDisposable, IAsyncDisposable
 
     private interface IAnimationProtocolHandler
     {
-        void PlayInstantAnimation(PixelsDie die, int index, int loopCount, byte faceIndex);
+        Task PlayInstantAnimationAsync(PixelsDie die, int index, int loopCount, byte faceIndex);
         Task SendInstantAnimationsAsync(PixelsDie die, InstantAnimationSet instantAnimations);
         Task SendAnimationSetAsync(PixelsDie die, AnimationSet animationSet);
     }
 
     private class PrereleaseAnimationProtocolHandler : IAnimationProtocolHandler
     {
-        public void PlayInstantAnimation(PixelsDie die, int index, int loopCount, byte faceIndex)
+        public Task PlayInstantAnimationAsync(PixelsDie die, int index, int loopCount, byte faceIndex)
         {
-            die._ble.SendMessage(new PlayInstantAnimationMessage
+            return die.SendMessage(new PlayInstantAnimationMessage
                 { Animation = (byte)index, LoopCount = 0, FaceIndex = faceIndex });
         }
 

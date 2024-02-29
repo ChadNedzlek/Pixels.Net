@@ -115,7 +115,7 @@ public partial class MainWindow : FluentWindow
         CancellationToken stopToken = _scanStop.Token;
         try
         {
-            await foreach (PixelsDie die in App.Current.PixelsManager.ScanAsync(true, false, cancellationToken: stopToken))
+            await foreach (PixelsDie die in App.Current.PixelsManager.ScanAsync(true, cancellationToken: stopToken))
             {
                 if (Dice.Dice.Any(d => d.Die.PixelId == die.PixelId))
                 {

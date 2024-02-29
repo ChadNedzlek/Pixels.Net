@@ -17,7 +17,7 @@ public class DieView : DependencyObject, INotifyPropertyChanged
         _isFromSave = fromSave;
         IsRolling = false;
         IsSaved = fromSave;
-        IsConnected = die.IsConnected;
+        IsConnected = die.ConnectionState == ConnectionState.Connected;
     }
 
     public void Connect()

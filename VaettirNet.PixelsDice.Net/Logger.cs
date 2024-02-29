@@ -1,7 +1,6 @@
 using System;
 using System.Runtime.CompilerServices;
-using VaettirNet.PixelsDice.Net.Ble;
-using VaettirNet.PixelsDice.Net.Interop;
+using VaettirNet.Btleplug;
 
 namespace VaettirNet.PixelsDice.Net;
 
@@ -47,6 +46,6 @@ public class Logger
     public static void SetLogLevel(PixelsLogLevel logLevel)
     {
         _logLevel = logLevel;
-        BleManager.SetLogLevel((BleLogLevel)(int)logLevel);
+        BtleManager.SetLogLevel((BtleLogLevel)logLevel);
     }
 }

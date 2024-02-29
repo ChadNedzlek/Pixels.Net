@@ -52,10 +52,10 @@ public partial class MainWindow : Window
 
     private async Task ScanForDice(CancellationToken cancellationToken)
     {
-        await foreach (PixelsDie die in _manager.ScanAsync(true, false, cancellationToken: cancellationToken))
+        await foreach (PixelsDie die in _manager.ScanAsync(true, cancellationToken: cancellationToken))
         {
             die.RollStateChanged += DieRolled;
-            Dice.Add(new DieView(die, die.IsConnected));
+            Dice.Add(new DieView(die, die.ConnectionState == ConnectionState.Connected));
         }
     }
 

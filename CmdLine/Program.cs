@@ -83,7 +83,7 @@ internal static class Program
             else
             {
                 Console.WriteLine("Searching for dice (can help to pick up and handle them)");
-                search = mgr.ScanAsync(true, true, cancellationToken: exit.Token);
+                search = mgr.ScanAsync(true, cancellationToken: exit.Token);
             }
 
             await foreach (PixelsDie die in search.WithCancellation(exit.Token))
@@ -110,7 +110,7 @@ internal static class Program
                     await die.SendAnimationSet(animationSet);
                 }
 
-                die.PlayInstantAnimation(3, 1, 0);
+                await die.PlayInstantAnimationAsync(3, 1, 0);
             }
             
             Console.WriteLine($"Found {found.Count} dice!");

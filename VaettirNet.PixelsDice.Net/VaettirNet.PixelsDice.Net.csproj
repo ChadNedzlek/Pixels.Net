@@ -2,8 +2,7 @@
 
     <PropertyGroup>
         <RootNamespace>VaettirNet.PixelsDice.Net</RootNamespace>
-        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-        <Description>Cross-platform library for interacting with Pixels dice from .NET, using SimpleBle</Description>
+        <Description>Cross-platform library for interacting with Pixels dice from .NET, using BtlePlug</Description>
         <Copyright>Chad Nedzlek 2024</Copyright>
         <Authors>Chad Nedzlek</Authors>
         <PackageProjectUrl>https://github.com/ChadNedzlek/Pixels.Net</PackageProjectUrl>
@@ -15,19 +14,15 @@
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 
         <PackageVersion>$(LocalVersion)</PackageVersion>
+
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     </PropertyGroup>
 
     <ItemGroup>
-        <None Include="runtimes/win-x64/*" Pack="true" PackagePath="runtimes/win-x64/native/">
-            <CopyToOutputDirectory Condition=" '$(IsWindows)' == 'true' ">PreserveNewest</CopyToOutputDirectory>
-            <Link Condition=" '$(IsWindows)' == 'true' ">%(Filename)%(Extension)</Link>
-        </None>
-        <None Include="runtimes/linux-x64/*" Pack="true" PackagePath="runtimes/linux-x64/native/">
-            <CopyToOutputDirectory Condition=" '$(IsLinux)' == 'true' ">PreserveNewest</CopyToOutputDirectory>
-            <Link Condition=" '$(IsLinux)' == 'true' ">%(Filename)%(Extension)</Link>
-        </None>
-        <None Include="runtimes/osx-x64/*" Pack="true" PackagePath="runtimes/osx-x64/native/"/>
-        <None Include="runtimes/osx-arm64/*" Pack="true" PackagePath="runtimes/osx-arm64/native/"/>
+        <PackageReference Include="VaettirNet.Btleplug" Version="0.1.1" />
+    </ItemGroup>
+
+    <ItemGroup>
         <None Include="README.md" Pack="true" PackagePath="/"/>
     </ItemGroup>
 
