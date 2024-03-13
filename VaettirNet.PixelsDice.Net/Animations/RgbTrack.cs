@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Drawing;
 using System.Linq;
 
 namespace VaettirNet.PixelsDice.Net.Animations;
@@ -17,6 +18,8 @@ public readonly record struct RgbTrack(ImmutableList<RgbKeyFrame> Frames, uint L
         ushort index = data.StoreKeyFrames(list);
         return new Protocol.RgbTrack { KeyFrameOffset = index, KeyFrameCount = (byte)Frames.Count, LedMask = LedMask };
     }
+
+    public static RgbTrack White { get; } = new RgbTrack([new RgbKeyFrame(Color.White, 0)], FaceMask.All);
 }
 
 internal static class RgbTrackExtensions

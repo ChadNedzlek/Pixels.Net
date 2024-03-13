@@ -11,13 +11,13 @@ public class GradientPatternAnimation : Animation
     public override AnimationType Type => AnimationType.GradientPattern;
     public ImmutableList<Track> Tracks { get; }
     public RgbTrack ColorTrack { get; }
-    public byte OverrideWithFace { get; }
+    public bool OverrideWithFace { get; }
 
     public GradientPatternAnimation(
         int durationMs,
         ImmutableList<Track> tracks,
         RgbTrack colorTrack,
-        byte overrideWithFace,
+        bool overrideWithFace = false,
         AnimationFlags flags = AnimationFlags.None
     ) : base(durationMs, flags)
     {
@@ -30,7 +30,7 @@ public class GradientPatternAnimation : Animation
         TimeSpan duration,
         ImmutableList<Track> tracks,
         RgbTrack colorTrack,
-        byte overrideWithFace,
+        bool overrideWithFace = false,
         AnimationFlags flags = AnimationFlags.None
     ) : base(
         (int)duration.TotalMilliseconds,
@@ -57,7 +57,7 @@ public class GradientPatternAnimation : Animation
                 TrackOffset = trackOffset,
                 TrackCount = (ushort)Tracks.Count,
                 GradientTrackOffset = gradientTrack,
-                OverrideWithFace = OverrideWithFace,
+                OverrideWithFace = (byte)(OverrideWithFace ? 1 : 0),
             });
     }
 }

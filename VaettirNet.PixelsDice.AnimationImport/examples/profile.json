@@ -1,0 +1,80 @@
+{
+  "definitions": [
+    {
+      "condition": {
+        "type": "rolling",
+        "repeatMs": 500
+      },
+      "animation": {
+        "type": "simple",
+        "durationMs": 200,
+        "faces": [2,4,6,8,10,12,14,16,18,20],
+        "color": "#440044",
+        "count": 4,
+        "fade": 0.1
+      }
+    },
+    {
+      "condition": {
+        "type": "rolled",
+        "faces": [20]
+      },
+      "animation": {
+        "type": "gradient",
+        "durationMs": 1000,
+        "track": {
+          "frames": [
+            {"color": "#000000"},
+            {"color": "#0000FF", "offsetMs":  100},
+            {"color": "#000000", "offsetMs":  200},
+            {"color": "#FF0000", "offsetMs":  300},
+            {"color": "#000000", "offsetMs":  400},
+            {"color": "#FFFFFF", "offsetMs":  500},
+            {"color": "#000000", "offsetMs":  600},
+            {"color": "#00FF00", "offsetMs":  700}
+          ]
+        }
+      }
+    },
+    {
+      "condition": {
+        "type": "rolled",
+        "faces": [2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19]
+      },
+      "animation": {
+        "type": "noise",
+        "durationMs": 1000,
+        "overall": {
+          "frames": [
+            {
+              "color": "#00FF44"
+            }
+          ]
+        },
+        "blinksPerSecond": 65,
+        "blinkDurationMs": 10,
+        "fade": 0,
+        "colorVar": 0.8
+      }
+    },
+    {
+      "condition": {
+        "type": "rolled",
+        "faces": [1]
+      },
+      "animation": {
+        "type": "normals",
+        "durationMs": 2000,
+        "axis": {
+          "frames": [
+            {"color": "#000000"},
+            {"color": "#FF0000", "offsetMs":  500},
+            {"color": "#000000", "offsetMs":  1000}
+          ]
+        },
+        "fade": 0.2,
+        "axisScroll": 1
+      }
+    }
+  ]
+}

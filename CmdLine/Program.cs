@@ -142,10 +142,10 @@ internal static class Program
     {
         return new AnimationSet([
             new AnimationRule(
-                new FaceCompareCondition(11, ComparisonType.GreaterThanOrEqual),
+                new RolledCondition(0x0F),
                 [
                     new RemoteDieAction(55),
-                    new PlayAnimationAction(1, FaceIndex.Current, BuildFadeAnimation()),
+                    new PlayAnimationAction(1, FaceIndex.Current, BuildNoiseAnimation()),
                 ])
         ]);
     }
@@ -168,21 +168,17 @@ internal static class Program
     private static NoiseAnimation BuildNoiseAnimation()
     {
         return new NoiseAnimation(
-            duration: TimeSpan.FromSeconds(5),
+            duration: TimeSpan.FromSeconds(1),
             overallGradient: new RgbTrack(
-                ImmutableList.Create(
-                    new RgbKeyFrame(Color.Red, TimeSpan.FromSeconds(1)),
-                    new RgbKeyFrame(Color.Blue, TimeSpan.FromSeconds(1)),
-                    new RgbKeyFrame(Color.Yellow, TimeSpan.FromSeconds(1))
-                ),
+                [
+                    new RgbKeyFrame(Color.Blue, TimeSpan.FromSeconds(1))
+                ],
                 0xFFFFFFFF
             ),
             individualGradient: new RgbTrack(
-                ImmutableList.Create(
-                    new RgbKeyFrame(Color.Purple, TimeSpan.FromSeconds(1)),
-                    new RgbKeyFrame(Color.White, TimeSpan.FromSeconds(1)),
-                    new RgbKeyFrame(Color.Green, TimeSpan.FromSeconds(1))
-                ),
+                [
+                    new RgbKeyFrame(Color.Purple, TimeSpan.FromSeconds(1))
+                ],
                 0xFFFFFFFF),
             blinksPerSecond: NoiseAnimation.MaxBlinksPerSecond,
             blinkDuration: TimeSpan.FromMilliseconds(10),

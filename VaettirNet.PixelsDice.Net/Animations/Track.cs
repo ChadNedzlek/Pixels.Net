@@ -16,6 +16,9 @@ public readonly record struct Track(ImmutableList<KeyFrame> Frames, uint LedMask
         ushort index = data.StoreKeyFrames(keyFrames);
         return new Protocol.Track { KeyFrameOffset = index, KeyFrameCount = (byte)Frames.Count, LedMask = LedMask };
     }
+    
+    public static Track White { get; } = new Track([new KeyFrame(1, 0)], FaceMask.All);
+
 }
 
 internal static class TrackExtensions

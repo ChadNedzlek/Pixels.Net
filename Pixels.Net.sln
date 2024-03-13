@@ -18,6 +18,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Global", "Global", "{0D1BD1
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WpfUIDice", "WpfUIDice\WpfUIDice.csproj", "{49E86B7E-510D-4443-9AD1-868FD85E49B3}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VaettirNet.PixelsDice.AnimationImport", "VaettirNet.PixelsDice.AnimationImport\VaettirNet.PixelsDice.AnimationImport.csproj", "{1939B779-CBA5-461B-B5EE-3BA367EBC298}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -44,5 +46,9 @@ Global
 		{49E86B7E-510D-4443-9AD1-868FD85E49B3}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{49E86B7E-510D-4443-9AD1-868FD85E49B3}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{49E86B7E-510D-4443-9AD1-868FD85E49B3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1939B779-CBA5-461B-B5EE-3BA367EBC298}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1939B779-CBA5-461B-B5EE-3BA367EBC298}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1939B779-CBA5-461B-B5EE-3BA367EBC298}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1939B779-CBA5-461B-B5EE-3BA367EBC298}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

@@ -62,7 +62,3 @@ public class WormAnimation : Animation
         });
     }
 }
-
-public class AnimationRule
-{
-}
