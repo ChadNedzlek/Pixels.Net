@@ -1,0 +1,38 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <TargetFramework>net8.0</TargetFramework>
+        <AssemblyName>anim-import</AssemblyName>
+        <PackAsTool>true</PackAsTool>
+        <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+        
+        <Description>cross platform command line dotnet tool for importing animation sets defined in JSON into pixels dice</Description>
+        <Copyright>Chad Nedzlek 2024</Copyright>
+        <Authors>Chad Nedzlek</Authors>
+        <PackageProjectUrl>https://github.com/ChadNedzlek/Pixels.Net</PackageProjectUrl>
+        <RepositoryUrl>https://github.com/ChadNedzlek/Pixels.Net</RepositoryUrl>
+        <RepositoryBranch>release</RepositoryBranch>
+        <PackageLicenseExpression>MIT</PackageLicenseExpression>
+        <PackageTags>gamewithpixels;pixels</PackageTags>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
+        <PackageVersion>$(LocalVersion)</PackageVersion>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <PackageReference Include="Mono.Options" Version="6.12.0.148" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\VaettirNet.PixelsDice.Net\VaettirNet.PixelsDice.Net.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\VaettirNet.PixelsDice.Net\VaettirNet.PixelsDice.Net.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <None Include="README.md" Pack="true" PackagePath="/"/>
+    </ItemGroup>
+
+</Project>
