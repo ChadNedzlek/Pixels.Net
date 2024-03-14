@@ -6,6 +6,6 @@ A dotnet tool for importing animation sets defined in JSON into Pixels dice
 
 ```shell
 dotnet tool install -g VaettirNet.PixelsDice.AnimationImport
-anim-import --help
-anim-import --all --file ./animSet.json
+pxd-anim-import --help
+pxd-anim-import --all --file ./animSet.json
 ```

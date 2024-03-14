@@ -3,7 +3,8 @@
     <PropertyGroup>
         <OutputType>Exe</OutputType>
         <TargetFramework>net8.0</TargetFramework>
-        <AssemblyName>anim-import</AssemblyName>
+        <AssemblyName>pxd-anim-import</AssemblyName>
+        <PackageId>$(MSBuildProjectName)</PackageId>
         <PackAsTool>true</PackAsTool>
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
         

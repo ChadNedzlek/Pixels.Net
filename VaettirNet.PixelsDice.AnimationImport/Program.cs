@@ -333,7 +333,7 @@ internal static class Program
 
     private static void WriteUsage(TextWriter writer, OptionSet options)
     {
-        writer.WriteLine("Usage: anim-import --file <json-file> --die <target-id> --die <target-id>");
+        writer.WriteLine("Usage: pxd-anim-import --file <json-file> --die <target-id> --die <target-id>");
         writer.WriteLine();
         options.WriteOptionDescriptions(writer);
     }
