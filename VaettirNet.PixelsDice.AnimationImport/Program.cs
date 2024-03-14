@@ -5,6 +5,7 @@ using System.Drawing;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices.Marshalling;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
@@ -183,14 +184,20 @@ internal static class Program
         {
             return imported switch
             {
+                CycleImportAnimation anim => new CycleAnimation(
+                    anim.DurationInMs,
+                    ToMask(anim.Faces),
+                    CreateRgbTrack(anim.Track),
+                    (byte)anim.Count,
+                    anim.Fade,
+                    anim.Intensity,
+                    anim.Cycles),
                 // BlinkIdImportAnimation anim => new BlinkIdAnimation(anim.DurationInMs,
                 //     (byte)anim.FramesPerBlink,
                 //     anim.Brightness),
                 NoiseImportAnimation anim => new NoiseAnimation(anim.DurationInMs,
                     CreateRgbTrack(anim.OverallGradientTrack),
-                    CreateRgbTrack(anim.IndividualGradientTrack ??
-                                   new ImportRgbTrack
-                                       { Frames = [new ImportRgbFrame { Color = "#FFFFFF", OffsetMs = 0 }] }),
+                    CreateRgbTrack(anim.IndividualGradientTrack),
                     anim.BlinksPerSecond,
                     anim.BlinksPerSecondVariance,
                     anim.BlinkDurationMs,

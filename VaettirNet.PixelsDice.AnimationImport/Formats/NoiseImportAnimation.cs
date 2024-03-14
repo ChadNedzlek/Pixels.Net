@@ -11,7 +11,7 @@ public class NoiseImportAnimation : ImportAnimation
     public ImportRgbTrack IndividualGradientTrack { get; set; }
     [JsonPropertyName("blinksPerSecond")]
     public double BlinksPerSecond { get; set; }
-    [JsonPropertyName("blinksPerVar")]
+    [JsonPropertyName("blinksPerSecondVar")]
     public double BlinksPerSecondVariance { get; set; }
     [JsonPropertyName("blinkDurationMs")]
     public int BlinkDurationMs { get; set; }
