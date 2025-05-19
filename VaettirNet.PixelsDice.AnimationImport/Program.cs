@@ -5,7 +5,6 @@ using System.Drawing;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices.Marshalling;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
@@ -18,6 +17,8 @@ using VaettirNet.PixelsDice.Net.Animations;
 using VaettirNet.PixelsDice.Net.Animations.Actions;
 using VaettirNet.PixelsDice.Net.Animations.Conditions;
 using VaettirNet.PixelsDice.Net.Animations.Definitions;
+
+namespace VaettirNet.PixelsDice.AnimationImport;
 
 internal static class Program
 {
@@ -118,7 +119,6 @@ internal static class Program
             angleScrollSpeed: 0,
             mainGradientColorVariance: 0,
             overrideType: NormalsColorOverrideType.None);
-        var y = CreateAnimation(profile.Definitions[0].Animation);
         
         PixelsManager manager = await PixelsManager.CreateAsync();
         if (targetDice == null || targetDice.Count == 0)
